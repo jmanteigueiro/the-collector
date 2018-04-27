@@ -1,3 +1,7 @@
+import Model.CredentialsList;
+import ViewModel.CredentialsViewModel;
+import Security.*;
+
 public class Main {
 
     /**
@@ -19,5 +23,17 @@ public class Main {
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí
 
         System.out.println("Hello World!");
+
+        CredentialsViewModel viewModel = new CredentialsViewModel();
+        viewModel.loadCredentials();
+        viewModel.saveCredentials();
+
+
+        String s = "OLÁ SOU O ANDRÉ";
+        Security sec = new Security();
+        AESValues aes = sec.encryptAES(s);
+        String pt = sec.decryptAES(aes.getKey(), aes.getIv(), aes.getCiphertext());
+        System.out.println(pt);
+
     }
 }
