@@ -2,12 +2,14 @@ package Data;
 
 import Model.Config;
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 
 import java.io.*;
 import java.security.PrivateKey;
 import Security.Security;
 
+/**
+ * Classe para ler e escrever as configurações para ficheiro.
+ */
 public class ConfigJSON {
     private String filename;
 
@@ -21,10 +23,14 @@ public class ConfigJSON {
      * @param config Objeto com a configuração
      */
     public void saveConfig(Config config){
-        byte[] simKey = config.getSimmetricKey();
+        byte[] symmetricKey = config.getSymmetricKey();
+        byte[] integrityKey = config.getIntegrityKey();
 
-        byte[] ciphertext = Security.encryptRSA(config.getSimmetricKey(), config.getAuthenticationPublicKey());
-        config.setSimmetricKey(ciphertext);
+        byte[] cipherSymmetricKey = Security.encryptRSA(config.getSymmetricKey(), config.getAuthenticationPublicKey());
+        config.setSymmetricKey(cipherSymmetricKey);
+
+        byte[] cipherIntegrityKey = Security.encryptRSA(config.getIntegrityKey(), config.getAuthenticationPublicKey());
+        config.setIntegrityKey(cipherIntegrityKey);
 
         Gson gson = new Gson();
         String configJson = gson.toJson(config);
@@ -36,7 +42,8 @@ public class ConfigJSON {
             e.printStackTrace();
         }
 
-        config.setSimmetricKey(simKey);
+        config.setSymmetricKey(symmetricKey);
+        config.setIntegrityKey(integrityKey);
     }
 
     /**
@@ -52,7 +59,11 @@ public class ConfigJSON {
         try (FileInputStream fis = new FileInputStream(filename)) {
             wholeconfig = fis.readAllBytes();
         }
-        catch (Exception e) {
+        catch (FileNotFoundException e) {
+            System.out.println("File not found: " + filename);
+            return new Config();
+        }
+        catch (Exception e){
             e.printStackTrace();
             return new Config();
         }
@@ -63,7 +74,8 @@ public class ConfigJSON {
         if (config == null)
             return new Config();
 
-        config.setSimmetricKey(Security.decryptRSA(config.getSimmetricKey(), sk));
+        config.setSymmetricKey(Security.decryptRSA(config.getSymmetricKey(), sk));
+        config.setIntegrityKey(Security.decryptRSA(config.getIntegrityKey(), sk));
 
         return config;
     }

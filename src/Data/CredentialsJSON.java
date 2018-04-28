@@ -5,14 +5,14 @@ import Model.CredentialsList;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.NoSuchFileException;
 
 import Security.Security;
 
+/**
+ * Classe para ler e escever as credenciais em ficheiro.
+ */
 public class CredentialsJSON {
     private String filename;
 
@@ -30,10 +30,10 @@ public class CredentialsJSON {
         Gson gson = new Gson();
         String listGSON = gson.toJson(list);
 
-        byte[] newSimmetricKey = Security.generateAESKey();
+        byte[] newSymmetricKey = Security.generateAESKey();
         byte[] newInitVector = Security.generateRandomBytes(16);
 
-        config.setSimmetricKey(newSimmetricKey);
+        config.setSymmetricKey(newSymmetricKey);
         config.setInitVector(newInitVector);
 
         byte[] ciphertext = Security.encryptAES(listGSON, config);
@@ -45,6 +45,10 @@ public class CredentialsJSON {
             e.printStackTrace();
         }
 
+        byte[] hmac = Security.computeHMAC(ciphertext, config);
+
+        config.setHmac(hmac);
+
         return config;
     }
 
@@ -54,7 +58,7 @@ public class CredentialsJSON {
      * @param config Objeto Config que contém a chave simétrica AES e o vetor de inicialização
      * @return Lista de credenciais
      */
-    public CredentialsList loadCredentials(Config config){
+    public CredentialsList loadCredentials(Config config) throws Exception {
         CredentialsList list = new CredentialsList();
 
         byte[] ciphertext;
@@ -62,9 +66,13 @@ public class CredentialsJSON {
         try (FileInputStream fis = new FileInputStream(filename)) {
             ciphertext = fis.readAllBytes();
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (FileNotFoundException e) {
+            System.out.println("File not found: " + filename);
             return new CredentialsList();
+        }
+
+        if (! Security.verifyHMAC(ciphertext, config)){
+            throw new CredentialsIntegrityException();
         }
 
         String plaintext = Security.decryptAES(ciphertext, config);
@@ -76,5 +84,12 @@ public class CredentialsJSON {
             list = new CredentialsList();
 
         return list;
+    }
+}
+
+/*** Este tipo de exceção é lançado quando o HMAC-SHA256 não é verificado corretamente */
+class CredentialsIntegrityException extends Exception{
+    public CredentialsIntegrityException(){
+        super("Integridade das credenciais comprometida.");
     }
 }

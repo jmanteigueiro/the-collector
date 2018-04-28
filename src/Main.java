@@ -1,13 +1,4 @@
-import Model.Config;
-import Model.CredentialsList;
 import ViewModel.CredentialsViewModel;
-import Security.*;
-import com.google.gson.Gson;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
 
 public class Main {
 
@@ -34,8 +25,7 @@ public class Main {
         // Para obter os dados para a UI, deve invocar-se sempre métodos de classes ViewModel!
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí
 
-        viewModel = new CredentialsViewModel();
-
-        //viewModel.initProgram(sk);
+        // TODO: receber a chave privada RSA
+        viewModel = new CredentialsViewModel(null);
     }
 }

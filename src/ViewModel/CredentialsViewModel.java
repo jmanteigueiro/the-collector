@@ -6,10 +6,10 @@ import Model.Config;
 import Model.Credential;
 import Model.CredentialsList;
 
+import javax.crypto.KeyGenerator;
 import java.io.FileInputStream;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.io.FileOutputStream;
+import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 /**
@@ -25,23 +25,25 @@ public class CredentialsViewModel {
     private ConfigJSON configJSON;
     private CredentialsJSON credentialsJSON;
 
+    public CredentialsViewModel(PrivateKey privateKey){
+        initProgram(privateKey);
+
+        privateKey = null;
+    }
+
     /**
      * Inicializa o programa depois do Login, carregando as configurações e as credenciais.
      * @param sk Chave privada de autenticação RSA para decifrar a chave simétrica.
      */
-    public void initProgram(PrivateKey privateKey){
+    private void initProgram(PrivateKey privateKey){
         configJSON = new ConfigJSON(fileConfig);
         credentialsJSON = new CredentialsJSON(fileCredentials);
 
-//        try (FileInputStream fis = new FileInputStream("sk.pem")){
-//            sk = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(fis.readAllBytes()));
-//        }
-//        catch(Exception e){}
-
         loadConfig(privateKey);
+
         loadCredentials();
 
-        // Save after initialization so the AES simmetric key changes
+        // Save after initialization so the AES symmetric key changes
         saveAllInformation();
     }
 
@@ -63,7 +65,14 @@ public class CredentialsViewModel {
     }
 
     private void loadCredentials(){
-        credentials = credentialsJSON.loadCredentials(config);
+        try {
+            credentials = credentialsJSON.loadCredentials(config);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Entra aqui se o HMAC está errado!
+            // TODO: Handle this exception! E.g. show error!
+            System.exit(1);
+        }
     }
 
     private Config saveCredentials(){

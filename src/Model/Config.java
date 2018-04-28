@@ -2,29 +2,52 @@ package Model;
 
 import Security.Security;
 
-public class Config {
+import java.io.Serializable;
+
+/**
+ * Classe que contém os parâmetros de configuração da aplicação.
+ */
+public class Config implements Serializable {
+    /*** Path do ficheiro que contém as credenciais. */
     private String fileCredentials;
+
+    /*** Chave pública RSA de autenticação, que servirá para cifrar a chave simétrica e a chave de integridade */
     private byte[] authenticationPublicKey;
-    private byte[] simmetricKey;
+
+    /*** Chave simétrica AES de 256 bits */
+    private byte[] symmetricKey;
+
+    /*** Vetor de inicialização para cifra AES */
     private byte[] initVector;
 
-    public Config(byte[] authenticationPublicKey, byte[] simmetricKey, byte[] initVector) {
+    /*** Chave de integridade para calculo de HMAC-SHA256 */
+    private byte[] integrityKey;
+
+    /*** Último HMAC-SHA256 das credenciais calculado */
+    private byte[] hmac;
+
+    public Config(byte[] authenticationPublicKey, byte[] symmetricKey, byte[] initVector, byte[] integrityKey, byte[] hmac) {
         this.authenticationPublicKey = authenticationPublicKey;
-        this.simmetricKey = simmetricKey;
+        this.symmetricKey = symmetricKey;
         this.initVector = initVector;
+        this.integrityKey = integrityKey;
+        this.hmac = hmac;
     }
 
-    public Config (String fileCredentials, byte[] authenticationPublicKey, byte[] simmetricKey, byte[] initVector){
+    public Config (String fileCredentials, byte[] authenticationPublicKey, byte[] symmetricKey, byte[] initVector, byte[] integrityKey, byte[] hmac){
         this.fileCredentials = fileCredentials;
         this.authenticationPublicKey = authenticationPublicKey;
-        this.simmetricKey = simmetricKey;
+        this.symmetricKey = symmetricKey;
         this.initVector = initVector;
+        this.integrityKey = integrityKey;
+        this.hmac = hmac;
     }
 
     public Config(){
         this.fileCredentials = "data.dat";
-        this.simmetricKey = Security.generateAESKey();
+        this.symmetricKey = Security.generateAESKey();
         this.initVector = Security.generateRandomBytes(16);
+        this.integrityKey = Security.generateAESKey();
     }
 
     public String getFileCredentials() {
@@ -43,12 +66,12 @@ public class Config {
         this.authenticationPublicKey = authenticationPublicKey;
     }
 
-    public byte[] getSimmetricKey() {
-        return simmetricKey;
+    public byte[] getSymmetricKey() {
+        return symmetricKey;
     }
 
-    public void setSimmetricKey(byte[] simmetricKey) {
-        this.simmetricKey = simmetricKey;
+    public void setSymmetricKey(byte[] symmetricKey) {
+        this.symmetricKey = symmetricKey;
     }
 
     public byte[] getInitVector() {
@@ -57,5 +80,21 @@ public class Config {
 
     public void setInitVector(byte[] initVector) {
         this.initVector = initVector;
+    }
+
+    public byte[] getIntegrityKey() {
+        return integrityKey;
+    }
+
+    public void setIntegrityKey(byte[] integrityKey) {
+        this.integrityKey = integrityKey;
+    }
+
+    public byte[] getHmac() {
+        return hmac;
+    }
+
+    public void setHmac(byte[] hmac) {
+        this.hmac = hmac;
     }
 }

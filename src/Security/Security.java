@@ -4,12 +4,17 @@ import Model.Config;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
+/**
+ * Esta classe contém os métodos de segurança necessários.
+ */
 public class Security {
 
     /**
@@ -23,7 +28,7 @@ public class Security {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
             IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
-            SecretKeySpec sk = new SecretKeySpec(config.getSimmetricKey(), "AES");
+            SecretKeySpec sk = new SecretKeySpec(config.getSymmetricKey(), "AES");
 
             cipher.init(Cipher.ENCRYPT_MODE, sk, iv);
 
@@ -48,7 +53,7 @@ public class Security {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
             IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
-            SecretKeySpec sk = new SecretKeySpec(config.getSimmetricKey(), "AES");
+            SecretKeySpec sk = new SecretKeySpec(config.getSymmetricKey(), "AES");
 
             cipher.init(Cipher.DECRYPT_MODE, sk, iv);
 
@@ -105,6 +110,40 @@ public class Security {
         }
 
         return null;
+    }
+
+    /**
+     * Calcula o HMAC-SHA256 de um texto cifrado dado.
+     * @param ciphertext Texto cifrado sobre o qual é calculado o HMAC
+     * @param config Objeto config que contém a chave de integridade
+     * @return HMAC calculado em formato de array de bytes
+     */
+    public static byte[] computeHMAC(byte[] ciphertext, Config config){
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            Key key = new SecretKeySpec(config.getIntegrityKey(), "HmacSHA256");
+            mac.init(key);
+
+            byte[] hmac = mac.doFinal(ciphertext);
+
+            return hmac;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Verifica a integridade dos dados comparando os valores de HMAC.
+     * @param ciphertext Texto cifrado sobre o qual é calculado o HMAC
+     * @param config Objeto Config que contém a chave de integridade e o HMAC original
+     * @return 'True' se a integridade foi mantida, 'False' caso contrário
+     */
+    public static boolean verifyHMAC(byte[] ciphertext, Config config){
+        byte[] computedHMAC = computeHMAC(ciphertext, config);
+
+        return Arrays.equals(computedHMAC, config.getHmac());
     }
 
     /**
