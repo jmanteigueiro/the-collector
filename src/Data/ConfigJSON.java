@@ -1,6 +1,6 @@
-package Database;
+package Data;
 
-import Model.Credential;
+import Model.Config;
 import Model.CredentialsList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,6 +28,26 @@ public class DataFile {
         catch (Exception e){
             System.out.println("SaveJSON: " + e.getMessage());
         }
+    }
+
+    public Config loadConfigJSON(){
+        Config config = new Config();
+
+        try {
+            Gson gson = new Gson();
+            Reader fileReader = new FileReader(filename);
+            JsonReader reader = new JsonReader(fileReader);
+            config = gson.fromJson(reader, config.getClass());
+            fileReader.close();
+        }
+        catch (Exception e){
+            System.out.println("LoadJSON: " + e.getMessage());
+        }
+
+        if (config == null)
+            config = new Config();
+
+        return config;
     }
 
     public CredentialsList loadJSON(){
