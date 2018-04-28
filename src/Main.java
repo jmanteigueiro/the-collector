@@ -1,4 +1,11 @@
+import ViewModel.CredentialsViewModel;
+
 public class Main {
+
+    /**
+     * Este objeto contém todos os métodos de ligação entre a Main e os dados
+     */
+    private static CredentialsViewModel viewModel;
 
     /**
      * Isto é um Javadoc, serve para descrever um método
@@ -18,6 +25,7 @@ public class Main {
         // Para obter os dados para a UI, deve invocar-se sempre métodos de classes ViewModel!
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí
 
-        System.out.println("Hello World!");
+        // TODO: receber a chave privada RSA
+        viewModel = new CredentialsViewModel(null);
     }
 }
