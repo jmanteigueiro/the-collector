@@ -1,72 +1,70 @@
 package Data;
 
 import Model.Config;
-import Model.CredentialsList;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
+import java.security.PrivateKey;
+import Security.Security;
 
-public class DataFile {
+public class ConfigJSON {
     private String filename;
 
-    public DataFile(String filename){
+    public ConfigJSON(String filename){
         this.filename = filename;
     }
 
-    public void saveJSON(CredentialsList list){
-        try {
-            Writer writer = new FileWriter(filename);
-            Gson gson = new GsonBuilder().create();
-            gson.toJson(list, writer);
-            writer.close();
+    /**
+     * Cifra a chave AES simétrica com a chave pública RSA
+     * e guarda como JSON o objeto num ficheiro.
+     * @param config Objeto com a configuração
+     */
+    public void saveConfig(Config config){
+        byte[] simKey = config.getSimmetricKey();
+
+        byte[] ciphertext = Security.encryptRSA(config.getSimmetricKey(), config.getAuthenticationPublicKey());
+        config.setSimmetricKey(ciphertext);
+
+        Gson gson = new Gson();
+        String configJson = gson.toJson(config);
+
+        try (FileOutputStream fos = new FileOutputStream(filename)) {
+            fos.write(configJson.getBytes());
         }
-        catch (Exception e){
-            System.out.println("SaveJSON: " + e.getMessage());
+        catch (Exception e) {
+            e.printStackTrace();
         }
+
+        config.setSimmetricKey(simKey);
     }
 
-    public Config loadConfigJSON(){
+    /**
+     * Lê o ficheiro JSON completo e decifra a chave AES simétrica.
+     * @param sk Chave privada RSA para decifrar a chave AES, que foi cifrada com chave pública RSA
+     * @return Objeto com as configurações
+     */
+    public Config loadConfig(PrivateKey sk){
         Config config = new Config();
 
-        try {
-            Gson gson = new Gson();
-            Reader fileReader = new FileReader(filename);
-            JsonReader reader = new JsonReader(fileReader);
-            config = gson.fromJson(reader, config.getClass());
-            fileReader.close();
+        byte[] wholeconfig;
+
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            wholeconfig = fis.readAllBytes();
         }
-        catch (Exception e){
-            System.out.println("LoadJSON: " + e.getMessage());
+        catch (Exception e) {
+            e.printStackTrace();
+            return new Config();
         }
+
+        Gson gson = new Gson();
+        config = gson.fromJson(new String(wholeconfig), config.getClass());
 
         if (config == null)
-            config = new Config();
+            return new Config();
+
+        config.setSimmetricKey(Security.decryptRSA(config.getSimmetricKey(), sk));
 
         return config;
-    }
-
-    public CredentialsList loadJSON(){
-        CredentialsList credentialsList = new CredentialsList();
-
-        try {
-            Gson gson = new Gson();
-            Reader fileReader = new FileReader(filename);
-            JsonReader reader = new JsonReader(fileReader);
-            credentialsList = gson.fromJson(reader, credentialsList.getClass());
-            fileReader.close();
-        }
-        catch (Exception e){
-            System.out.println("LoadJSON: " + e.getMessage());
-        }
-
-        if (credentialsList == null)
-            credentialsList = new CredentialsList();
-
-        return credentialsList;
     }
 }

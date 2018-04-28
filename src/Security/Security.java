@@ -1,31 +1,35 @@
 package Security;
 
+import Model.Config;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Security {
 
-    public static AESValues encryptAES(String text){
+    /**
+     * Cifra um texto qualquer com o algoritmo AES-256 em modo CBC.
+     * @param text Texto a cifrar
+     * @param config Objeto Config que contém a chave simétrica e o vetor de inicialização a utilizar
+     * @return Texto cifrado em formato de array de bytes
+     */
+    public static byte[] encryptAES(String text, Config config){
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
-            byte[] ivBytes = generateRandomBytes(cipher.getBlockSize());
-            byte[] key = generateAESKey();
-
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
-            SecretKeySpec sk = new SecretKeySpec(key, "AES");
+            IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
+            SecretKeySpec sk = new SecretKeySpec(config.getSimmetricKey(), "AES");
 
             cipher.init(Cipher.ENCRYPT_MODE, sk, iv);
 
             byte[] ciphertext = cipher.doFinal(text.getBytes());
 
-            return new AESValues(key, ivBytes, ciphertext);
+            return ciphertext;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -33,12 +37,18 @@ public class Security {
         return null;
     }
 
-    public static String decryptAES(byte[] keyBytes, byte[] ivBytes, byte[] ciphertext){
+    /**
+     * Decifra um qualquer array de bytes através de AES-256 em modo CBC.
+     * @param ciphertext Array de bytes a decifrar
+     * @param config Objeto Config que contém a chave simétrica e o vetor de inicialização a utilizar
+     * @return Texto limpo original
+     */
+    public static String decryptAES(byte[] ciphertext, Config config){
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
-            SecretKeySpec sk = new SecretKeySpec(keyBytes, "AES");
+            IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
+            SecretKeySpec sk = new SecretKeySpec(config.getSimmetricKey(), "AES");
 
             cipher.init(Cipher.DECRYPT_MODE, sk, iv);
 
@@ -53,7 +63,57 @@ public class Security {
         return null;
     }
 
-    private static byte[] generateRandomBytes(int blockSize){
+    /**
+     * Cifra um array de bytes utilizando uma chave pública RSA, em modo ECB.
+     * @param text Texto (em bytes) a ser cifrado
+     * @param key Chave pública codificada em bytes
+     * @return Texto cifrado em formato de array de bytes.
+     */
+    public static byte[] encryptRSA(byte[] text, byte[] key){
+        try {
+            PublicKey pk = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(key));
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.PUBLIC_KEY, pk);
+
+            byte[] ciphertext = cipher.doFinal(text);
+
+            return ciphertext;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Decifra um array de bytes utilizando uma chave privada RSA.
+     * @param ciphertext Texto cifrado para decifrar
+     * @param key Chave privada RSA
+     * @return Texto limpo em formato de array de bytes
+     */
+    public static byte[] decryptRSA(byte[] ciphertext, PrivateKey key){
+        try {
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.PRIVATE_KEY, key);
+
+            byte[] plaintext = cipher.doFinal(ciphertext);
+
+            return plaintext;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Gera um array de bytes aleatório com o tamanho especificado em parâmetro.
+     * É util para gerar um vetor de inicialização.
+     * @param blockSize Tamanho do Array
+     * @return Array de bytes aleatório
+     */
+    public static byte[] generateRandomBytes(int blockSize){
         byte[] bytes = null;
 
         try {
@@ -67,7 +127,11 @@ public class Security {
         return bytes;
     }
 
-    private static byte[] generateAESKey(){
+    /**
+     * Gera uma chave simétrica aleatória de 256 bits para ser utilizada na cifra AES.
+     * @return Chave simétrica AES de 256 bits.
+     */
+    public static byte[] generateAESKey(){
         byte[] key = null;
 
         try {
