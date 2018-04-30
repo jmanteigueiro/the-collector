@@ -2,7 +2,6 @@ package Model;
 
 import Security.Security;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 import java.io.Serializable;
 
