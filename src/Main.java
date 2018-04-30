@@ -1,12 +1,21 @@
+import View.MainViewController;
 import ViewModel.CredentialsViewModel;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class Main {
+public class Main extends Application {
 
     /**
      * Este objeto contém todos os métodos de ligação entre a Main e os dados
      */
     private static CredentialsViewModel viewModel;
-
+    /**
+     * Este objeto contém todos os métodos de ligação entre a Main e os view
+     */
+    private static MainViewController mainViewController;
     /**
      * Isto é um Javadoc, serve para descrever um método
      *
@@ -26,6 +35,22 @@ public class Main {
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí
 
         // TODO: receber a chave privada RSA
-        viewModel = new CredentialsViewModel(null);
+        //viewModel = new CredentialsViewModel(null);
+
+        launch(args);
     }
+
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        Parent root = FXMLLoader.load(getClass().getResource("/View/mainView.fxml"));
+
+        Scene scene = new Scene(root, 800, 450);
+        mainViewController.setStage(primaryStage);
+        primaryStage.setTitle("The Collector");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
 }
