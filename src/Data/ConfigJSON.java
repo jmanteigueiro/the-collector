@@ -1,10 +1,16 @@
 package Data;
 
+import Data.Exceptions.CredentialsIntegrityException;
+import Data.Helpers.GsonHelpers;
 import Model.Config;
-import com.google.gson.Gson;
+import com.google.gson.*;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import Security.Security;
 
 /**
@@ -22,18 +28,28 @@ public class ConfigJSON {
      * e guarda como JSON o objeto num ficheiro.
      * @param config Objeto com a configuração
      */
-    public void saveConfig(Config config){
-        byte[] symmetricKey = config.getSymmetricKey();
-        byte[] integrityKey = config.getIntegrityKey();
+    public Config saveConfig(Config config){
+        byte[] symmetricKey = Security.generate256BitKey();
+        byte[] integrityKey = Security.generate256BitKey();
 
-        byte[] cipherSymmetricKey = Security.encryptRSA(config.getSymmetricKey(), config.getAuthenticationPublicKey());
+        byte[] initializationVector = Security.generateRandomBytes(16);
+        config.setInitVector(initializationVector);
+
+        byte[] cipherCredentials = Security.encryptAES(config.getCredentialsBytes(), symmetricKey, initializationVector);
+        config.setCredentialsBytes(cipherCredentials);
+
+        byte[] hmac = Security.computeHMAC(cipherCredentials, integrityKey);
+        config.setHmac(hmac);
+
+        byte[] cipherSymmetricKey = Security.encryptRSA(symmetricKey, config.getAuthenticationPublicKey());
         config.setSymmetricKey(cipherSymmetricKey);
 
-        byte[] cipherIntegrityKey = Security.encryptRSA(config.getIntegrityKey(), config.getAuthenticationPublicKey());
+        byte[] cipherIntegrityKey = Security.encryptRSA(integrityKey, config.getAuthenticationPublicKey());
         config.setIntegrityKey(cipherIntegrityKey);
 
-        Gson gson = new Gson();
+        Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);
+        gson = null;
 
         try (FileOutputStream fos = new FileOutputStream(filename)) {
             fos.write(configJson.getBytes());
@@ -44,20 +60,22 @@ public class ConfigJSON {
 
         config.setSymmetricKey(symmetricKey);
         config.setIntegrityKey(integrityKey);
+
+        return config;
     }
 
     /**
      * Lê o ficheiro JSON completo e decifra a chave AES simétrica.
-     * @param sk Chave privada RSA para decifrar a chave AES, que foi cifrada com chave pública RSA
+     * @param privateKey Chave privada RSA para decifrar a chave AES, que foi cifrada com chave pública RSA
      * @return Objeto com as configurações
      */
-    public Config loadConfig(PrivateKey sk){
+    public Config loadConfig(PrivateKey privateKey) throws CredentialsIntegrityException {
         Config config = new Config();
 
-        byte[] wholeconfig;
+        byte[] wholeConfig;
 
         try (FileInputStream fis = new FileInputStream(filename)) {
-            wholeconfig = fis.readAllBytes();
+            wholeConfig = fis.readAllBytes();
         }
         catch (FileNotFoundException e) {
             System.out.println("File not found: " + filename);
@@ -68,14 +86,21 @@ public class ConfigJSON {
             return new Config();
         }
 
-        Gson gson = new Gson();
-        config = gson.fromJson(new String(wholeconfig), config.getClass());
+        Gson gson = GsonHelpers.buildCustomGson();
+        config = gson.fromJson(new String(wholeConfig), config.getClass());
+        gson = null;
 
         if (config == null)
             return new Config();
 
-        config.setSymmetricKey(Security.decryptRSA(config.getSymmetricKey(), sk));
-        config.setIntegrityKey(Security.decryptRSA(config.getIntegrityKey(), sk));
+        config.setSymmetricKey(Security.decryptRSA(config.getSymmetricKey(), privateKey));
+        config.setIntegrityKey(Security.decryptRSA(config.getIntegrityKey(), privateKey));
+
+        if (! Security.verifyHMAC(config.getCredentialsBytes(), config.getHmac(), config.getIntegrityKey()) )
+            throw new CredentialsIntegrityException();
+
+        byte[] plainCredentials = Security.decryptAES(config.getCredentialsBytes(), config.getSymmetricKey(), config.getInitVector());
+        config.setCredentialsBytes(plainCredentials);
 
         return config;
     }

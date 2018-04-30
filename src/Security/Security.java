@@ -1,7 +1,5 @@
 package Security;
 
-import Model.Config;
-
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -9,6 +7,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -19,22 +18,21 @@ public class Security {
 
     /**
      * Cifra um texto qualquer com o algoritmo AES-256 em modo CBC.
-     * @param text Texto a cifrar
-     * @param config Objeto Config que contém a chave simétrica e o vetor de inicialização a utilizar
+     * @param text Texto a cifrar em bytes
+     * @param keyBytes Chave de cifra simétrica
+     * @param ivBytes Vetor de inicialização
      * @return Texto cifrado em formato de array de bytes
      */
-    public static byte[] encryptAES(String text, Config config){
+    public static byte[] encryptAES(byte[] text, byte[] keyBytes, byte[] ivBytes){
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
-            IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
-            SecretKeySpec sk = new SecretKeySpec(config.getSymmetricKey(), "AES");
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            SecretKeySpec sk = new SecretKeySpec(keyBytes, "AES");
 
             cipher.init(Cipher.ENCRYPT_MODE, sk, iv);
 
-            byte[] ciphertext = cipher.doFinal(text.getBytes());
-
-            return ciphertext;
+            return cipher.doFinal(text);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -45,21 +43,20 @@ public class Security {
     /**
      * Decifra um qualquer array de bytes através de AES-256 em modo CBC.
      * @param ciphertext Array de bytes a decifrar
-     * @param config Objeto Config que contém a chave simétrica e o vetor de inicialização a utilizar
+     * @param keyBytes Chafe de cifra simétrica
+     * @param ivBytes Vetor de inicialização
      * @return Texto limpo original
      */
-    public static String decryptAES(byte[] ciphertext, Config config){
+    public static byte[] decryptAES(byte[] ciphertext, byte[] keyBytes, byte[] ivBytes){
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
-            IvParameterSpec iv = new IvParameterSpec( config.getInitVector() );
-            SecretKeySpec sk = new SecretKeySpec(config.getSymmetricKey(), "AES");
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            SecretKeySpec sk = new SecretKeySpec(keyBytes, "AES");
 
             cipher.init(Cipher.DECRYPT_MODE, sk, iv);
 
-            byte[] plaintext = cipher.doFinal(ciphertext);
-
-            return new String(plaintext);
+            return cipher.doFinal(ciphertext);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -81,9 +78,7 @@ public class Security {
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.PUBLIC_KEY, pk);
 
-            byte[] ciphertext = cipher.doFinal(text);
-
-            return ciphertext;
+            return cipher.doFinal(text);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -102,9 +97,7 @@ public class Security {
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.PRIVATE_KEY, key);
 
-            byte[] plaintext = cipher.doFinal(ciphertext);
-
-            return plaintext;
+            return cipher.doFinal(ciphertext);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,18 +108,16 @@ public class Security {
     /**
      * Calcula o HMAC-SHA256 de um texto cifrado dado.
      * @param ciphertext Texto cifrado sobre o qual é calculado o HMAC
-     * @param config Objeto config que contém a chave de integridade
+     * @param integrityKey Chave de integridade de 256 bits
      * @return HMAC calculado em formato de array de bytes
      */
-    public static byte[] computeHMAC(byte[] ciphertext, Config config){
+    public static byte[] computeHMAC(byte[] ciphertext, byte[] integrityKey){
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            Key key = new SecretKeySpec(config.getIntegrityKey(), "HmacSHA256");
+            Key key = new SecretKeySpec(integrityKey, "HmacSHA256");
             mac.init(key);
 
-            byte[] hmac = mac.doFinal(ciphertext);
-
-            return hmac;
+            return mac.doFinal(ciphertext);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,13 +128,14 @@ public class Security {
     /**
      * Verifica a integridade dos dados comparando os valores de HMAC.
      * @param ciphertext Texto cifrado sobre o qual é calculado o HMAC
-     * @param config Objeto Config que contém a chave de integridade e o HMAC original
+     * @param hmac HMAC original, previamente calculado
+     * @param integrityKey Chave de integridade de 256 bits
      * @return 'True' se a integridade foi mantida, 'False' caso contrário
      */
-    public static boolean verifyHMAC(byte[] ciphertext, Config config){
-        byte[] computedHMAC = computeHMAC(ciphertext, config);
+    public static boolean verifyHMAC(byte[] ciphertext, byte[] hmac, byte[] integrityKey){
+        byte[] computedHMAC = computeHMAC(ciphertext, integrityKey);
 
-        return Arrays.equals(computedHMAC, config.getHmac());
+        return Arrays.equals(computedHMAC, hmac);
     }
 
     /**
@@ -170,12 +162,13 @@ public class Security {
      * Gera uma chave simétrica aleatória de 256 bits para ser utilizada na cifra AES.
      * @return Chave simétrica AES de 256 bits.
      */
-    public static byte[] generateAESKey(){
+    public static byte[] generate256BitKey(){
         byte[] key = null;
 
         try {
+            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-            keyGenerator.init(256);
+            keyGenerator.init(256, secureRandom);
             SecretKey s = keyGenerator.generateKey();
             key = s.getEncoded();
         } catch (NoSuchAlgorithmException e) {
@@ -183,5 +176,15 @@ public class Security {
         }
 
         return key;
+    }
+
+    public static PrivateKey privateKeyFromBytes(byte[] bytes){
+        try {
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(new PKCS8EncodedKeySpec(bytes));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
