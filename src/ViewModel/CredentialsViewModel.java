@@ -1,29 +1,22 @@
 package ViewModel;
 
 import Data.ConfigJSON;
-import Data.CredentialsJSON;
+import Data.Exceptions.CredentialsIntegrityException;
 import Model.Config;
-import Model.Credential;
 import Model.CredentialsList;
 
-import javax.crypto.KeyGenerator;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
 
 /**
  * Ligação entre a janela principal do programa (lista de credenciais) e os objetos.
  */
 public class CredentialsViewModel {
-    private String fileCredentials = "data.dat";
     private String fileConfig = "config.cfg";
 
     private Config config;
-    private CredentialsList credentials;
+    private CredentialsList credentialsList;
 
     private ConfigJSON configJSON;
-    private CredentialsJSON credentialsJSON;
 
     public CredentialsViewModel(PrivateKey privateKey){
         initProgram(privateKey);
@@ -33,15 +26,12 @@ public class CredentialsViewModel {
 
     /**
      * Inicializa o programa depois do Login, carregando as configurações e as credenciais.
-     * @param sk Chave privada de autenticação RSA para decifrar a chave simétrica.
+     * @param privateKey Chave privada de autenticação RSA para decifrar a chave simétrica.
      */
     private void initProgram(PrivateKey privateKey){
         configJSON = new ConfigJSON(fileConfig);
-        credentialsJSON = new CredentialsJSON(fileCredentials);
 
-        loadConfig(privateKey);
-
-        loadCredentials();
+        loadAllInformation(privateKey);
 
         // Save after initialization so the AES symmetric key changes
         saveAllInformation();
@@ -52,31 +42,17 @@ public class CredentialsViewModel {
      * Deve ser chamado sempre que algum destes objetos for modificado.
      */
     private void saveAllInformation(){
-        config = saveCredentials();
-        saveConfig();
+        config.setCredentialsList(credentialsList);
+        config = configJSON.saveConfig(config);
     }
 
-    private void loadConfig(PrivateKey sk){
-        config = configJSON.loadConfig(sk);
-    }
-
-    private void saveConfig(){
-        configJSON.saveConfig(config);
-    }
-
-    private void loadCredentials(){
+    private void loadAllInformation(PrivateKey sk){
         try {
-            credentials = credentialsJSON.loadCredentials(config);
-        } catch (Exception e) {
+            config = configJSON.loadConfig(sk);
+        } catch (CredentialsIntegrityException e) {
             e.printStackTrace();
-            // Entra aqui se o HMAC está errado!
-            // TODO: Handle this exception! E.g. show error!
-            System.exit(1);
         }
-    }
-
-    private Config saveCredentials(){
-        return credentialsJSON.saveCredentials(config, credentials);
+        credentialsList = config.getCredentialsList();
     }
 
 //    private void disposeCredentials(){

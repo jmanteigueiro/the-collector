@@ -1,6 +1,7 @@
 package Model;
 
 import Security.Security;
+import com.google.gson.Gson;
 
 import java.io.Serializable;
 
@@ -8,8 +9,8 @@ import java.io.Serializable;
  * Classe que contém os parâmetros de configuração da aplicação.
  */
 public class Config implements Serializable {
-    /*** Path do ficheiro que contém as credenciais. */
-    private String fileCredentials;
+    /*** Credenciais em bytes */
+    private byte[] credentialsBytes;
 
     /*** Chave pública RSA de autenticação, que servirá para cifrar a chave simétrica e a chave de integridade */
     private byte[] authenticationPublicKey;
@@ -26,36 +27,10 @@ public class Config implements Serializable {
     /*** Último HMAC-SHA256 das credenciais calculado */
     private byte[] hmac;
 
-    public Config(byte[] authenticationPublicKey, byte[] symmetricKey, byte[] initVector, byte[] integrityKey, byte[] hmac) {
-        this.authenticationPublicKey = authenticationPublicKey;
-        this.symmetricKey = symmetricKey;
-        this.initVector = initVector;
-        this.integrityKey = integrityKey;
-        this.hmac = hmac;
-    }
-
-    public Config (String fileCredentials, byte[] authenticationPublicKey, byte[] symmetricKey, byte[] initVector, byte[] integrityKey, byte[] hmac){
-        this.fileCredentials = fileCredentials;
-        this.authenticationPublicKey = authenticationPublicKey;
-        this.symmetricKey = symmetricKey;
-        this.initVector = initVector;
-        this.integrityKey = integrityKey;
-        this.hmac = hmac;
-    }
-
     public Config(){
-        this.fileCredentials = "data.dat";
-        this.symmetricKey = Security.generateAESKey();
+        this.symmetricKey = Security.generate256BitKey();
         this.initVector = Security.generateRandomBytes(16);
-        this.integrityKey = Security.generateAESKey();
-    }
-
-    public String getFileCredentials() {
-        return fileCredentials;
-    }
-
-    public void setFileCredentials(String fileCredentials) {
-        this.fileCredentials = fileCredentials;
+        this.integrityKey = Security.generate256BitKey();
     }
 
     public byte[] getAuthenticationPublicKey() {
@@ -96,5 +71,32 @@ public class Config implements Serializable {
 
     public void setHmac(byte[] hmac) {
         this.hmac = hmac;
+    }
+
+    public byte[] getCredentialsBytes() {
+        return credentialsBytes;
+    }
+
+    public void setCredentialsBytes(byte[] credentialsBytes) {
+        this.credentialsBytes = credentialsBytes;
+    }
+
+    public CredentialsList getCredentialsList() {
+        if (credentialsBytes == null)
+            return new CredentialsList();
+
+        Gson gson = new Gson();
+        CredentialsList credentialsList = new CredentialsList();
+
+        credentialsList = gson.fromJson(new String(credentialsBytes), credentialsList.getClass());
+
+        gson = null;
+        return credentialsList;
+    }
+
+    public void setCredentialsList(CredentialsList credentialsList) {
+        Gson gson = new Gson();
+        credentialsBytes = gson.toJson(credentialsList).getBytes();
+        gson = null;
     }
 }

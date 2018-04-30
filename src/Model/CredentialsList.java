@@ -18,7 +18,7 @@ public class CredentialsList extends ArrayList<Credential> {
         }
     }
 
-    public void add(String website, String username, String password){
+    public void addCredential(String website, String username, String password){
         this.add(new Credential(website, username, password.toCharArray()));
     }
 }
