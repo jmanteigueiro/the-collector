@@ -55,7 +55,11 @@ public class CredentialsViewModel {
         credentialsList = config.getCredentialsList();
     }
 
-//    private void disposeCredentials(){
+    public CredentialsList getCredentialsList() {
+        return credentialsList;
+    }
+
+    //    private void disposeCredentials(){
 //        credentials.dispose();
 //        credentials = null;
 //    }
