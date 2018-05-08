@@ -27,6 +27,10 @@ public class Config implements Serializable {
     /*** Último HMAC-SHA256 das credenciais calculado */
     private byte[] hmac;
 
+    /** Google Key*/
+    private byte[] gkey;
+
+
     public Config(){
         this.symmetricKey = Security.generate256BitKey();
         this.initVector = Security.generateRandomBytes(16);
@@ -98,5 +102,13 @@ public class Config implements Serializable {
         Gson gson = new Gson();
         credentialsBytes = gson.toJson(credentialsList).getBytes();
         gson = null;
+    }
+
+    public byte[] getGkey() {
+        return gkey;
+    }
+
+    public void setGkey(byte[] gkey) {
+        this.gkey = gkey;
     }
 }
