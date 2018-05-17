@@ -2,6 +2,7 @@ package ViewModel;
 
 import Data.ConfigJSON;
 import Data.Exceptions.CredentialsIntegrityException;
+import GoogleAuthenticator.GAuth;
 import Model.Config;
 import Model.CredentialsList;
 
@@ -31,6 +32,23 @@ public class CredentialsViewModel {
      */
     private void initProgram(PrivateKey privateKey){
         configJSON = new ConfigJSON(fileConfig);
+
+        //Se o ficheiro config ainda não existir, gerar uma googleKey
+        GAuth.generateNewKey();
+        //Gravar no config a googlekey
+        //Devolver o QR code da googlekey
+
+        //Se o ficheiro config já existir então começar aqui:
+        //Abrir o config
+        Config config = null;
+        try {
+            //O utilizador introduz o código do telemóvel e depois:
+            String QRCode = null;
+            //Validar o codigo introduzido pelo utilizador
+            Boolean TOTPValid = GAuth.validateTOTPCode(config, QRCode);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
         loadAllInformation(privateKey);
 

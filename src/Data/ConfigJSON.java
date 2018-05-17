@@ -2,6 +2,7 @@ package Data;
 
 import Data.Exceptions.CredentialsIntegrityException;
 import Data.Helpers.GsonHelpers;
+import GoogleAuthenticator.GAuth;
 import Model.Config;
 import com.google.gson.*;
 
@@ -43,6 +44,9 @@ public class ConfigJSON {
 
         byte[] cipherIntegrityKey = Security.encryptRSA(integrityKey, config.getAuthenticationPublicKey());
         config.setIntegrityKey(cipherIntegrityKey);
+
+        byte[] googlekey = GAuth.gkey;
+        config.setGkey(googlekey);
 
         Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);
