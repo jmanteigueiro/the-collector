@@ -5,6 +5,7 @@ import Data.Exceptions.CredentialsIntegrityException;
 import Model.Config;
 import Model.CredentialsList;
 
+import java.io.IOException;
 import java.security.*;
 
 /**
@@ -41,9 +42,13 @@ public class CredentialsViewModel {
      * Guarda configurações e credenciais.
      * Deve ser chamado sempre que algum destes objetos for modificado.
      */
-    private void saveAllInformation(){
+    private void saveAllInformation() {
         config.setCredentialsList(credentialsList);
-        config = configJSON.saveConfig(config);
+        try {
+            config = configJSON.saveConfig(config);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadAllInformation(PrivateKey sk){
@@ -59,8 +64,19 @@ public class CredentialsViewModel {
         return credentialsList;
     }
 
-    //    private void disposeCredentials(){
-//        credentials.dispose();
-//        credentials = null;
-//    }
+    public boolean saveInformation(CredentialsList credentialsList){
+        config.setCredentialsList(credentialsList);
+
+        try {
+            config = configJSON.saveConfig(config);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private void disposeCredentials(){
+        credentialsList.dispose();
+        credentialsList = null;
+    }
 }

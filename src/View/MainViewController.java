@@ -11,14 +11,17 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.security.*;
 import java.util.ResourceBundle;
 
 
@@ -95,7 +98,7 @@ public class MainViewController implements Initializable {
      */
     @FXML
     void onOpenFile(ActionEvent event) {
-        Stage stage = getStage();
+
 
 //        FileChooser fileChooser = new FileChooser();
 //        fileChooser.setTitle("Open passwords File");
@@ -108,15 +111,46 @@ public class MainViewController implements Initializable {
 //            String fileData = file.getName();
                 // decifrar com sk
         // }
+        boolean load = false;
 
-            //credentialsViewModel = new CredentialsViewModel(privateKey);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
+            Parent root = loader.load();
+            loginController loginController = loader.getController();
+            load = loginController.open(stage, root);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if ( load ){
+            PrivateKey priv;
 
-        credentialsList = new CredentialsList();
-        credentialsList.addCredential("face", "ee", "bb");
-        credentialsList.addCredential("google", "eeffff", "bb");
-        credentialsList.addCredential("slack", "kkkk", "bb");
+            try {
+                KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+                SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+                keyGen.initialize(1024, random);
 
-       fillDataTable(credentialsList);
+                KeyPair pair = keyGen.generateKeyPair();
+                priv = pair.getPrivate();
+                //credentialsViewModel = new CredentialsViewModel(priv);
+
+                credentialsList = new CredentialsList();
+                credentialsList.addCredential("face", "ee", "bb");
+                credentialsList.addCredential("google", "eeffff", "bb");
+                credentialsList.addCredential("slack", "kkkk", "bb");
+
+                fillDataTable(credentialsList);
+
+            } catch (NoSuchAlgorithmException |  NoSuchProviderException e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error while loading file");
+                alert.showAndWait();
+            }
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error login");
+            alert.showAndWait();
+        }
 
     }
 
@@ -125,13 +159,20 @@ public class MainViewController implements Initializable {
      */
     @FXML
     void onSaveFile(ActionEvent event) {
-
+        boolean done = credentialsViewModel.saveInformation(credentialsList);
+        if ( !done ) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error saving file");
+            alert.showAndWait();
+        }
     }
     /**
      * method to close file
      */
     @FXML
     void onCloseFile(ActionEvent event) {
+        dataTable.getItems().clear();
+        credentialsList.dispose();
 
     }
 

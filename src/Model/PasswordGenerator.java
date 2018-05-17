@@ -8,9 +8,16 @@ public class PasswordGenerator {
     private int passSize;
 
     public PasswordGenerator(int size){
+
         this.passSize = size;
     }
 
+
+    /*
+    * size char = 2 bytes
+    * 128 bits -> 16 bytes
+    * 16 * 2 = 32 === 128/4
+    * */
     public String generator() throws NoSuchAlgorithmException {
 
         char[] elements = new char[93];
@@ -26,7 +33,6 @@ public class PasswordGenerator {
         for (int i = 0; i < this.passSize/4; i++) {
             int nextInt = secureRandom.nextInt(elements.length);
             pass.append(elements[nextInt]);
-
         }
 
 
