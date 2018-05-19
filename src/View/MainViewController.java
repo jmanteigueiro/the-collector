@@ -111,27 +111,31 @@ public class MainViewController implements Initializable {
 //            String fileData = file.getName();
                 // decifrar com sk
         // }
+
         boolean load = false;
 
+
+
+        PrivateKey priv;
         try {
+
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+            keyGen.initialize(1024, random);
+
+            KeyPair pair = keyGen.generateKeyPair();
+            priv = pair.getPrivate();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
             Parent root = loader.load();
             loginController loginController = loader.getController();
-            load = loginController.open(stage, root);
-        } catch (IOException e) {
+            load = loginController.open(stage, root, priv);
+
+        } catch ( NoSuchAlgorithmException |  NoSuchProviderException | IOException  e) {
             e.printStackTrace();
         }
         if ( load ){
-            PrivateKey priv;
-
             try {
-                KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
-                SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-                keyGen.initialize(1024, random);
-
-                KeyPair pair = keyGen.generateKeyPair();
-                priv = pair.getPrivate();
-                //credentialsViewModel = new CredentialsViewModel(priv);
 
                 credentialsList = new CredentialsList();
                 credentialsList.addCredential("face", "ee", "bb");
@@ -140,7 +144,7 @@ public class MainViewController implements Initializable {
 
                 fillDataTable(credentialsList);
 
-            } catch (NoSuchAlgorithmException |  NoSuchProviderException e) {
+            } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("Error while loading file");
                 alert.showAndWait();
