@@ -166,12 +166,13 @@ public class PortugueseEID {
     public PublicKey getPublicKey() {
 
         PTEID_Certificate signature = null;
+        byte[] cert = null;
         try {
             // Get the certificate from the card
             signature = card.getSignature();
 
             // Get the certificate data from the card
-            byte[] cert = signature.getCertData().GetBytes();
+            cert = signature.getCertData().GetBytes();
         } catch (PTEID_Exception e) {
             e.printStackTrace();
         }
@@ -184,6 +185,7 @@ public class PortugueseEID {
             cf = CertificateFactory.getInstance("X.509");
 
             // Create a input stream with the certificate data
+            assert cert != null;
             InputStream fin = new ByteArrayInputStream(cert);
 
             // Get the certificate in the X.509 format
