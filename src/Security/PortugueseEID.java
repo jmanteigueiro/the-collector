@@ -3,10 +3,14 @@ package Security;
 import pt.gov.cartaodecidadao.*;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
     /*
         TODO: Generate nonce;
@@ -31,7 +35,7 @@ public class PortugueseEID {
         }
     }
 
-    public PortugueseEID(){
+    public PortugueseEID() {
 
         try {
             // Initiate the SDK
@@ -62,7 +66,13 @@ public class PortugueseEID {
     }
 
 
-
+    /**
+     * Sign a nonce and verify it's signature with the public key
+     *
+     * @param nonce nonce to be signed, in the format of a string array
+     * @param pk    public key used to verify the signature
+     * @return boolean with true if the signature is valid and false if otherwise
+     */
     public boolean signNonce(String[] nonce, PublicKey pk) {
 
         // Get SHA-256
@@ -136,7 +146,7 @@ public class PortugueseEID {
      * Write the Public Key to pk.pem
      * Called the first time someone authenticates, using a new card, and creates their password manager instance
      */
-    private void writePublicKeyToFile(){
+    public void writePublicKeyToFile() {
 
         FileOutputStream fileOutputStream = null;
         try {
@@ -160,7 +170,32 @@ public class PortugueseEID {
     }
 
     /**
+     * Retrieves the public key from a file
+     * @param pathToFile String with the path to the public key
+     * @return PublicKey object
+     */
+    public PublicKey getPublicKeyFromFile(String pathToFile) {
+        try {
+            // Read the public key
+            byte[] publicKeyBytes = Files.readAllBytes(Paths.get(pathToFile));
+
+            // Create a X.509 key spec
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+
+            // Get RSA instance
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+
+            // Return the PublicKey object
+            return kf.generatePublic(keySpec);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
      * Get the Public Key from the PortugueseEID card
+     *
      * @return Public Key object
      */
     public PublicKey getPublicKey() {
@@ -189,7 +224,7 @@ public class PortugueseEID {
             InputStream fin = new ByteArrayInputStream(cert);
 
             // Get the certificate in the X.509 format
-            sign_certif = (X509Certificate)cf.generateCertificate(fin);
+            sign_certif = (X509Certificate) cf.generateCertificate(fin);
         } catch (CertificateException e) {
             e.printStackTrace();
         }
@@ -202,7 +237,7 @@ public class PortugueseEID {
      * Close the connection to the card.
      * Needs to be called in the end (when the connection is open)
      */
-    public void closeConnection(){
+    public void closeConnection() {
         try {
             PTEID_ReaderSet.releaseSDK();
         } catch (PTEID_Exception e) {
@@ -222,6 +257,23 @@ public class PortugueseEID {
             System.out.println("Error: " + e);
         }
         pid.closeConnection();
+    }
+    */
+
+    /*
+    //
+    public static void main(String[] args) {
+        PortugueseEID pid = new PortugueseEID();
+        PublicKey pk2 = pid.getPublicKey();
+        System.out.println(pk2);
+        pid.writePublicKeyToFile();
+        PublicKey pk1 = pid.getPublicKeyFromFile("pk.pem");
+        if(pk1.equals(pk2))
+            System.out.println("True");
+        else
+            System.out.println("False");
+        pid.closeConnection();
+
     }
     */
 }
