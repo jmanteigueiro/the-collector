@@ -10,11 +10,16 @@ import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Random;
 
 /**
  * Esta classe contém os métodos de segurança necessários.
  */
 public class Security {
+
+
+    private static final String VALID_NONCE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+{}[]|:;<>?,./";
 
     /**
      * Cifra um texto qualquer com o algoritmo AES-256 em modo CBC.
@@ -187,4 +192,40 @@ public class Security {
         }
         return null;
     }
+
+
+
+
+
+    /**
+     *
+     * @param size // 88 tg make a 128 nonce
+     * @param date // Get the date to use as counter --> String dateTimeString = new Date().toString();
+     * @return The nonce as S tring
+     */
+    private String generateNonce(int size, String date){
+        // Instance a SecureRandom
+        Random random = new SecureRandom();
+
+        // 40 for the counter, that's time
+        int passwordLength = size - 40;
+
+        // StringBuilder nonce
+        StringBuilder nonce = new StringBuilder();
+
+        // Generate the random characters
+        for (int i = 0; i < passwordLength; i++)
+            nonce.append(VALID_NONCE_CHARS.charAt((random.nextInt(VALID_NONCE_CHARS.length()))));
+
+        // Transform date to bytes
+        byte[] dateByteArray = date.getBytes();
+
+        // Append the date to random string to obtain the final nonce
+        nonce.append(Base64.getEncoder().encodeToString(dateByteArray));
+
+        // Return the nonce
+        return nonce.toString();
+    }
+
+
 }

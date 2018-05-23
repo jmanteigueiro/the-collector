@@ -11,13 +11,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
-    /*
-        TODO: Generate nonce;
-        TODO: nonce+counter (data? ou simples ctr)
-        TODO: Guardar nas notas do CC
-        --> Autenticação passa a necessitar do CC permanentemente
-    */
 
 public class PortugueseEID {
 
@@ -26,12 +21,16 @@ public class PortugueseEID {
     private PTEID_ReaderSet readerSet;
     private X509Certificate sign_certif;
 
+    // This is necessary otherwise it won't work.
+    // Portuguese middleware should be installed, or atleast the pteidlibj present.
     static {
+        //TODO: check what operating system is running this and change the location of the library
+
+        // Linux
         try {
             System.loadLibrary("pteidlibj");
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Native code library failed to load.\n" + e);
-            System.exit(1);
         }
     }
 
@@ -71,7 +70,7 @@ public class PortugueseEID {
      *
      * @param nonce nonce to be signed, in the format of a string array
      * @param pk    public key used to verify the signature
-     * @return boolean with true if the signature is valid and false if otherwise
+     * @return boolean true if the signature is valid, false if otherwise
      */
     public boolean signNonce(String[] nonce, PublicKey pk) {
 
@@ -103,7 +102,8 @@ public class PortugueseEID {
             e.printStackTrace();
         }
 
-        // Testing --> should return 256
+        // TESTING
+        // --> should return 256
         // System.out.println(pBAsignedNonce.Size());
 
         // Get a Signature object with SHA256withRSA (what the PortugueseEID card supports)
@@ -233,16 +233,132 @@ public class PortugueseEID {
         return sign_certif.getPublicKey();
     }
 
+
+    /**
+     * Writes the keys to the CC personal notes field
+     * @param symmetricKey symmetric Key in the format of String
+     * @param integrityKey integrity key in the format of String
+     * @return true or false depending if the data was written to the card or not
+     */
+    public boolean writeKeysToCC(String symmetricKey, String integrityKey){
+        // Initiate a StringBuilder
+        StringBuilder dataToWrite = new StringBuilder();
+
+        // Append the data
+        dataToWrite.append("SymmetricKey");
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append(symmetricKey);
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append("IntegrityKey");
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append(integrityKey);
+
+        // Encode it to Base64
+        String encoded = Base64.getEncoder().encodeToString(dataToWrite.toString().getBytes());
+
+        // Create a PTEID_ByteArray with the data
+        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
+
+        // Flag to obtain the result
+        boolean result = false;
+        try {
+
+            // Write the data to the card
+            // If successful, result equals true
+            // Else, result equals false
+            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+
+        // Return the result
+        return result;
+    }
+
+
+    /**
+     * Writes the keys to the CC personal notes field
+     * @param keys keys object with both keys
+     * @return true or false depending if the data was written to the card or not
+     */
+    public boolean writeKeysToCC(dbKeys keys){
+        // Initiate a StringBuilder
+        StringBuilder dataToWrite = new StringBuilder();
+
+        // Append the data
+        dataToWrite.append("SymmetricKey");
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append(keys.getSymmetricKey());
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append("IntegrityKey");
+        dataToWrite.append(">>>>>>");
+        dataToWrite.append(keys.getIntegrityKey());
+
+        // Encode it to Base64
+        String encoded = Base64.getEncoder().encodeToString(dataToWrite.toString().getBytes());
+
+        // Create a PTEID_ByteArray with the data
+        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
+
+        // Flag to obtain the result
+        boolean result = false;
+        try {
+
+            // Write the data to the card
+            // If successful, result equals true
+            // Else, result equals false
+            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+
+        // Return the result
+        return result;
+    }
+
+    public dbKeys getKeysFromCC(){
+
+        // Initiate a dbKeys to contain both keys
+        dbKeys keys = new dbKeys();
+
+        // Initiate a StringBuilder to contain the data
+        StringBuilder data = new StringBuilder();
+
+        try {
+            // Read the data from the card
+            String dataRead = card.readPersonalNotes();
+
+            // Decode it from Base64
+            byte[] decoded = Base64.getDecoder().decode(dataRead);
+
+            // Obtain the String
+            for(int i=0; i<decoded.length; i++)
+                data.append((char)decoded[i]);
+
+            // Set the keys
+            keys.setSymmetricKey(data.toString().split(">>>>>>")[1]);
+            keys.setIntegrityKey(data.toString().split(">>>>>>")[3]);
+
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+        return keys;
+    }
+
+
     /**
      * Close the connection to the card.
      * Needs to be called in the end (when the connection is open)
+     * @return true is connection is closed, false if otherwise
      */
-    public void closeConnection() {
+    public boolean closeConnection() {
         try {
             PTEID_ReaderSet.releaseSDK();
         } catch (PTEID_Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     /* Exemplo de uso das funções
@@ -258,12 +374,11 @@ public class PortugueseEID {
         }
         pid.closeConnection();
     }
-    */
 
-    /*
-    //
+
     public static void main(String[] args) {
         PortugueseEID pid = new PortugueseEID();
+        // TESTING
         PublicKey pk2 = pid.getPublicKey();
         System.out.println(pk2);
         pid.writePublicKeyToFile();
@@ -272,8 +387,19 @@ public class PortugueseEID {
             System.out.println("True");
         else
             System.out.println("False");
-        pid.closeConnection();
 
+
+        dbKeys keys = new dbKeys();
+        boolean writeResult;// = pid.writeKeysToCC("123", "345");
+        keys.setIntegrityKey("234");
+        keys.setSymmetricKey("567");
+        writeResult = pid.writeKeysToCC(keys);
+        System.out.println(writeResult);
+
+        pid.getKeysFromCC();
+        //System.out.println(keys.getIntegrityKey());
+        //System.out.println(keys.getSymmetricKey());
+        pid.closeConnection();
     }
     */
 }
