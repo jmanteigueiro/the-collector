@@ -87,7 +87,7 @@ public class MainViewController
                 e.printStackTrace();
             }
 
-            credentialsViewModel = new CredentialsViewModel(privateKey);
+            credentialsViewModel = new CredentialsViewModel();
             credentialsList = credentialsViewModel.getCredentialsList();
 
             fillDataTable(credentialsList);
