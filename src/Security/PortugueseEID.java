@@ -72,7 +72,7 @@ public class PortugueseEID {
      * @param pk    public key used to verify the signature
      * @return boolean true if the signature is valid, false if otherwise
      */
-    public boolean signNonce(String[] nonce, PublicKey pk) {
+    public boolean signNonceAndVerify(String nonce, PublicKey pk) {
 
         // Get SHA-256
         MessageDigest hash = null;
@@ -86,7 +86,7 @@ public class PortugueseEID {
         byte[] nonces = new byte[0];
         try {
             assert hash != null;
-            nonces = hash.digest(nonce[0].getBytes("UTF-8"));
+            nonces = hash.digest(nonce.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -124,7 +124,7 @@ public class PortugueseEID {
 
         // Pass the nonce to be verified
         try {
-            sha256withRSA.update(nonce[0].getBytes("UTF-8"));
+            sha256withRSA.update(nonce.getBytes("UTF-8"));
         } catch (SignatureException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -281,7 +281,7 @@ public class PortugueseEID {
      * @param keys keys object with both keys
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(dbKeys keys){
+    public boolean writeKeysToCC(Security.DBKeys keys){
         // Initiate a StringBuilder
         StringBuilder dataToWrite = new StringBuilder();
 
@@ -316,10 +316,10 @@ public class PortugueseEID {
         return result;
     }
 
-    public dbKeys getKeysFromCC(){
+    public Security.DBKeys getKeysFromCC(){
 
-        // Initiate a dbKeys to contain both keys
-        dbKeys keys = new dbKeys();
+        // Initiate a DBKeys to contain both keys
+        Security.DBKeys keys = new Security.DBKeys();
 
         // Initiate a StringBuilder to contain the data
         StringBuilder data = new StringBuilder();
@@ -361,45 +361,37 @@ public class PortugueseEID {
         return true;
     }
 
-    /* Exemplo de uso das funções
-    public static void main(String[] args) {
-        PortugueseEID pid = new PortugueseEID();
-        try {
-            PublicKey pk2 = pid.getPublicKey();
-            System.out.println(pk2);
-            pid.signNonce(new String[]{"NONCE_GOES_HERE|COUNTER"}, pk2);
-        } catch (PTEID_Exception e) {
-            e.printStackTrace();
-            System.out.println("Error: " + e);
-        }
-        pid.closeConnection();
-    }
+//    public static void main(String[] args) {
+//        PortugueseEID pid = new PortugueseEID();
+//         pid.writePublicKeyToFile();
+//
+//        pid.closeConnection();
+//    }
+//
+//    public static void main(String[] args) {
+//        PortugueseEID pid = new PortugueseEID();
+//        // TESTING
+//        PublicKey pk2 = pid.getPublicKey();
+//        System.out.println(pk2);
+//        pid.writePublicKeyToFile();
+//        PublicKey pk1 = pid.getPublicKeyFromFile("pk.pem");
+//        if(pk1.equals(pk2))
+//            System.out.println("True");
+//        else
+//            System.out.println("False");
+//
+//
+//        DBKeys keys = new DBKeys();
+//        boolean writeResult;// = pid.writeKeysToCC("123", "345");
+//        keys.setIntegrityKey("234");
+//        keys.setSymmetricKey("567");
+//        writeResult = pid.writeKeysToCC(keys);
+//        System.out.println(writeResult);
+//
+//        pid.getKeysFromCC();
+//        //System.out.println(keys.getIntegrityKey());
+//        //System.out.println(keys.getSymmetricKey());
+//        pid.closeConnection();
+//    }
 
-
-    public static void main(String[] args) {
-        PortugueseEID pid = new PortugueseEID();
-        // TESTING
-        PublicKey pk2 = pid.getPublicKey();
-        System.out.println(pk2);
-        pid.writePublicKeyToFile();
-        PublicKey pk1 = pid.getPublicKeyFromFile("pk.pem");
-        if(pk1.equals(pk2))
-            System.out.println("True");
-        else
-            System.out.println("False");
-
-
-        dbKeys keys = new dbKeys();
-        boolean writeResult;// = pid.writeKeysToCC("123", "345");
-        keys.setIntegrityKey("234");
-        keys.setSymmetricKey("567");
-        writeResult = pid.writeKeysToCC(keys);
-        System.out.println(writeResult);
-
-        pid.getKeysFromCC();
-        //System.out.println(keys.getIntegrityKey());
-        //System.out.println(keys.getSymmetricKey());
-        pid.closeConnection();
-    }
-    */
 }

@@ -39,12 +39,6 @@ public class ConfigJSON {
         byte[] hmac = Security.computeHMAC(cipherCredentials, integrityKey);
         config.setHmac(hmac);
 
-        byte[] cipherSymmetricKey = Security.encryptRSA(symmetricKey, config.getAuthenticationPublicKey());
-        config.setSymmetricKey(cipherSymmetricKey);
-
-        byte[] cipherIntegrityKey = Security.encryptRSA(integrityKey, config.getAuthenticationPublicKey());
-        config.setIntegrityKey(cipherIntegrityKey);
-
         byte[] googlekey = GAuth.gkey;
         config.setGkey(googlekey);
 
@@ -67,10 +61,9 @@ public class ConfigJSON {
 
     /**
      * Lê o ficheiro JSON completo e decifra a chave AES simétrica.
-     * @param privateKey Chave privada RSA para decifrar a chave AES, que foi cifrada com chave pública RSA
      * @return Objeto com as configurações
      */
-    public Config loadConfig(PrivateKey privateKey) throws CredentialsIntegrityException {
+    public Config loadConfig() {
         Config config = new Config();
 
         byte[] wholeConfig;
@@ -94,9 +87,10 @@ public class ConfigJSON {
         if (config == null)
             return new Config();
 
-        config.setSymmetricKey(Security.decryptRSA(config.getSymmetricKey(), privateKey));
-        config.setIntegrityKey(Security.decryptRSA(config.getIntegrityKey(), privateKey));
+        return config;
+    }
 
+    public Config decryptConfig(Config config) throws CredentialsIntegrityException {
         if (! Security.verifyHMAC(config.getCredentialsBytes(), config.getHmac(), config.getIntegrityKey()) )
             throw new CredentialsIntegrityException();
 

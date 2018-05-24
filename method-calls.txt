@@ -1,0 +1,18 @@
+Load Config
+Load Credentials List
+
+IF Config -> Public Key IS EMPTY:   # Novo utilizador
+    Get Public Key from CARD
+    Save Public Key to Config
+    Configure Google Authenticator
+    Save Google Authenticator data to Config
+    Save Config on Disk
+ELSE:
+    Generate Nonce
+    Sign Nonce with CC's Secret Key
+    Verify Signature with Public Key from Config
+    
+    IF Signature IS NOT VALID:
+        Exit Program
+
+Show Program Main UI

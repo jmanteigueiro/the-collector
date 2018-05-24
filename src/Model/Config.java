@@ -16,13 +16,13 @@ public class Config implements Serializable {
     private byte[] authenticationPublicKey;
 
     /*** Chave simétrica AES de 256 bits */
-    private byte[] symmetricKey;
+    private transient byte[] symmetricKey;
 
     /*** Vetor de inicialização para cifra AES */
     private byte[] initVector;
 
     /*** Chave de integridade para calculo de HMAC-SHA256 */
-    private byte[] integrityKey;
+    private transient byte[] integrityKey;
 
     /*** Último HMAC-SHA256 das credenciais calculado */
     private byte[] hmac;
@@ -35,6 +35,7 @@ public class Config implements Serializable {
         this.symmetricKey = Security.generate256BitKey();
         this.initVector = Security.generateRandomBytes(16);
         this.integrityKey = Security.generate256BitKey();
+
     }
 
     public byte[] getAuthenticationPublicKey() {

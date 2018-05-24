@@ -1,6 +1,6 @@
 package Security;
 
-public class dbKeys {
+public class DBKeys {
     private String symmetricKey;
     private String integrityKey;
 

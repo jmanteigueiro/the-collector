@@ -30,7 +30,6 @@ public class GAuth {
      *
      * @param username  -> Nome do utilizador ou email
      * @param path      -> Localização do ficheiro que vai guardar a chave
-     * @param publickey -> Chave publica para encriptar a chave TOTP
      * @throws IOException
      */
     public static void NewGoogleAuthenticator(String username, String path) throws IOException {
@@ -105,7 +104,7 @@ public class GAuth {
      * @param insertedTOTP  -> Chave temporaria introduzida pelo utilizador
      * @return True se o código introduzido estiver correto, False se o código estiver errado
      */
-    public static Boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
+    public static boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
         byte[] ciphertext = new byte[0];
 
         gkey = config.getGkey();

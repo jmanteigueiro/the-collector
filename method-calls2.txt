@@ -1,0 +1,8 @@
+# Tudo é chamado no construtor do View Model
+
+initProgram:
+    new ConfigJson( PATH_TO_CONFIG )   
+
+    loadAllInformation:          # Lê o ficheiro Config
+        Config = configJSON.loadConfig()
+        CredentialsList = config.getCredentialsList()

@@ -11,6 +11,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -193,7 +194,15 @@ public class Security {
         return null;
     }
 
-
+    public static PublicKey publicKeyFromBytes(byte[] bytes){
+        try {
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(new X509EncodedKeySpec(bytes));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 
 
@@ -203,7 +212,7 @@ public class Security {
      * @param date // Get the date to use as counter --> String dateTimeString = new Date().toString();
      * @return The nonce as S tring
      */
-    private String generateNonce(int size, String date){
+    public static String generateNonce(int size){
         // Instance a SecureRandom
         Random random = new SecureRandom();
 
@@ -218,7 +227,8 @@ public class Security {
             nonce.append(VALID_NONCE_CHARS.charAt((random.nextInt(VALID_NONCE_CHARS.length()))));
 
         // Transform date to bytes
-        byte[] dateByteArray = date.getBytes();
+        Date date = new Date();
+        byte[] dateByteArray = date.toString().getBytes();
 
         // Append the date to random string to obtain the final nonce
         nonce.append(Base64.getEncoder().encodeToString(dateByteArray));
