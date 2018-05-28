@@ -3,28 +3,15 @@ package View;
 
 import Model.Credential;
 import Model.PasswordGenerator;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
-import java.io.IOException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.Optional;
-import java.util.ResourceBundle;
-
-
 
 
 public class CredentialDetailController {
@@ -39,10 +26,10 @@ public class CredentialDetailController {
     private TextField tf_username;
 
     @FXML
-    private CheckBox cb_pass;
+    private MenuButton bt_genPass;
 
     @FXML
-    private MenuButton bt_genPass;
+    private MenuItem bt_40bit;
 
     @FXML
     private MenuItem bt_128bit;
@@ -83,30 +70,29 @@ public class CredentialDetailController {
 
         change[0] = false;
         try {
-            Scene scene = new Scene(root, 550, 450);
+            Scene scene = new Scene(root);
             stage.setTitle("Credential Info");
             stage.setResizable(false);
             stage.setScene(scene);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(parentStage);
 
-            setListenners(stage, c1);
+            setListeners(stage, c1);
             tf_website.setText(c1.getWebsite());
             tf_username.setText(c1.getUsername());
-            tf_pass.setText("***************");
+            tf_pass.setText(new String(c1.getPassword()));
 
             stage.showAndWait();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void setListenners(Stage stage, Credential c1){
+    private void setListeners(Stage stage, Credential c1){
         stage.setOnCloseRequest(event -> {
             if (!c1.getWebsite().equals(tf_website.getText()) || !String.valueOf(c1.getPassword()).equals(tf_pass.getText()) || !c1.getUsername().equals(tf_username.getText())) { //something change
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setContentText("SAVE?");
+                alert.setContentText("Save?");
                 Optional<ButtonType> bt = alert.showAndWait();
                 if (bt.isPresent() && bt.get() == ButtonType.OK) {
                     newC.setUsername(tf_username.getText());
@@ -122,11 +108,10 @@ public class CredentialDetailController {
 
         });
 
-        cb_pass.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if(cb_pass.isSelected())
-                tf_pass.setText(String.valueOf(c1.getPassword()));
-            else
-                tf_pass.setText("***************");
+        bt_40bit.setOnAction(event -> {
+            String newPass = genPassword(40);
+            tf_pass.setText(newPass);
+            newC.setPassword(newPass.toCharArray());
         });
 
         bt_128bit.setOnAction(event -> {
@@ -142,6 +127,7 @@ public class CredentialDetailController {
         });
 
         bt_cancel.setOnAction(event -> {
+            newC = null;
             stage.close();
         });
 

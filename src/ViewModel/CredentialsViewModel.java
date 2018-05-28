@@ -9,6 +9,7 @@ import Model.CredentialsList;
 
 import CryptoPackage.PortugueseEID;
 import CryptoPackage.Security;
+import javafx.scene.control.Alert;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,21 +21,26 @@ import java.util.Base64;
  * Ligação entre a janela principal do programa (lista de credenciais) e os objetos.
  */
 public class CredentialsViewModel {
-    private String fileConfig = "config.cfg";
+    private String fileConfig = "creddb.cfg";
 
     private Config config;
     private CredentialsList credentialsList;
 
     private ConfigJSON configJSON;
 
-    public CredentialsViewModel(){
+    public CredentialsViewModel() {
+        initProgram();
+    }
+
+    public CredentialsViewModel(String path) {
+        this.fileConfig = path;
         initProgram();
     }
 
     /**
      * Inicializa o programa depois do Login, carregando as configurações e as credenciais.
      */
-    private void initProgram(){
+    private void initProgram() {
         configJSON = new ConfigJSON(fileConfig);
 
         File f = new File(fileConfig);
@@ -57,7 +63,7 @@ public class CredentialsViewModel {
         else {
             registerUser();
         }
-        credentialsList.addCredential("google","a","b");
+
         // Save after initialization so the AES symmetric key changes
         saveAllInformation();
     }
@@ -65,7 +71,7 @@ public class CredentialsViewModel {
     /**
      * Método a ser chamado quando o ficheiro já existe, i.e. o utilizador já está registado.
      */
-    private void loadAllInformation(){
+    private void loadAllInformation() {
         // Carregar chave pública e dados cifrados
         config = configJSON.loadConfig();
 
@@ -80,14 +86,16 @@ public class CredentialsViewModel {
         boolean verified = pid.signNonceAndVerify(nonce, Security.publicKeyFromBytes( config.getAuthenticationPublicKey() ));
 
         if (!verified){
-            System.exit(1);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("The application was not able to verify your identity.");
+            alert.showAndWait();
+            System.exit(2);
         }
 
         // TODO: fazer google auth
 
         // Obter chaves de cifra e integridade
         DBKeys dbKeys = pid.getKeysFromCC();
-
 
         config.setSymmetricKey( Base64.getDecoder().decode(dbKeys.getSymmetricKey()) );
         config.setIntegrityKey( Base64.getDecoder().decode(dbKeys.getIntegrityKey()) );
@@ -99,6 +107,10 @@ public class CredentialsViewModel {
             config = configJSON.decryptConfig(config);
         } catch (CredentialsIntegrityException e) {
             e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Credentials integrity is compromised.");
+            alert.showAndWait();
+            System.exit(3);
         }
 
         credentialsList = config.getCredentialsList();
@@ -106,6 +118,11 @@ public class CredentialsViewModel {
 
     public CredentialsList getCredentialsList() {
         return credentialsList;
+    }
+
+    public void setCredentialsList(CredentialsList list) {
+        credentialsList = list;
+        config.setCredentialsList(list);
     }
 
     /**

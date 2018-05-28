@@ -3,6 +3,7 @@ package CryptoPackage;
 import Data.Helpers.GsonHelpers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import javafx.scene.control.Alert;
 import pt.gov.cartaodecidadao.*;
 
 import java.io.*;
@@ -58,6 +59,9 @@ public class PortugueseEID {
 
             if (card == null) {
                 System.out.println("Wasn't able to obtain information from the card.");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
+                alert.showAndWait();
                 System.exit(1);
             }
 

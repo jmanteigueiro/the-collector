@@ -6,22 +6,20 @@ import ViewModel.CredentialsViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.MouseEvent;
-import javafx.stage.Modality;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.security.*;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 
@@ -46,10 +44,10 @@ public class MainViewController implements Initializable {
     private MenuItem close;
 
     @FXML
-    private TableColumn<Credential, String> website;
+    private Button btnAddCredential;
 
     @FXML
-    private TableColumn<Credential, char[]> password;
+    private TableColumn<Credential, String> website;
 
     @FXML
     private TableColumn<Credential, String> name;
@@ -60,7 +58,55 @@ public class MainViewController implements Initializable {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        credentialsViewModel = new CredentialsViewModel();
+        File file = null;
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Splash - The Collector");
+        alert.setHeaderText("Welcome to The Collector");
+        alert.setContentText("Choose one of the following options.");
+
+        ButtonType buttonTypeCreate = new ButtonType("Create a new file");
+        ButtonType buttonTypeLoad = new ButtonType("Load an existing file");
+
+        alert.getButtonTypes().setAll(buttonTypeCreate, buttonTypeLoad);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == buttonTypeLoad) {
+            do {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open a Credentials Database");
+                fileChooser.setInitialDirectory(new File("."));
+                fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
+                );
+                file = fileChooser.showOpenDialog(stage);
+
+                if (file == null)
+                    showExitDialog();
+            }
+            while (file == null);
+        }
+        else if (result.get() == buttonTypeCreate){
+            do {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open a Credentials Database");
+                fileChooser.setInitialDirectory(new File("."));
+                fileChooser.setInitialFileName("creddb.cfg");
+                fileChooser.getExtensionFilters().addAll(
+                        new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
+                );
+                file = fileChooser.showSaveDialog(stage);
+
+                if (file == null)
+                    showExitDialog();
+            }
+            while (file == null);
+        }
+        else {
+            System.exit(1);
+        }
+
+        credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
 
         fillDataTable(credentialsViewModel.getCredentialsList());
 
@@ -68,9 +114,6 @@ public class MainViewController implements Initializable {
                 new PropertyValueFactory<>("website"));
         name.setCellValueFactory(
                 new PropertyValueFactory<>("username"));
-        password.setCellValueFactory(
-                new PropertyValueFactory<>("password"));
-
         website.setCellFactory(TextFieldTableCell.forTableColumn());
         website.setOnEditCommit(event ->
                 event.getTableView().getItems().get(event.getTablePosition().getRow()).setWebsite(event.getNewValue()));
@@ -89,75 +132,37 @@ public class MainViewController implements Initializable {
     }
 
     /**
+     * Show exit dialog
+     */
+    private void showExitDialog(){
+        Alert alert;
+        Optional<ButtonType> result;
+        alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setContentText("Are you sure you want to exit The Collector?");
+        result = alert.showAndWait();
+
+        if (result.get() == ButtonType.OK) {
+            System.exit(0);
+        }
+    }
+
+    /**
      * method to handle new file creation
      */
     @FXML
     void onNewFile(ActionEvent event) {
 
     }
+
     /**
      * method to handle file opening
      */
     @FXML
     void onOpenFile(ActionEvent event) {
-
-
-//        FileChooser fileChooser = new FileChooser();
-//        fileChooser.setTitle("Open passwords File");
-//        fileChooser.getExtensionFilters().addAll(
-//                new FileChooser.ExtensionFilter("TheCollectorFile", "*.tclt"),
-//                new FileChooser.ExtensionFilter("All files", "*.*")
-//        );
-//        File file = fileChooser.showOpenDialog(stage);
-//        if (file != null) {
-//            String fileData = file.getName();
-                // decifrar com sk
-        // }
-
-        boolean load = false;
-
-            credentialsViewModel = new CredentialsViewModel();
-
-//        PrivateKey priv;
-//        try {
-//
-//            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
-//            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-//            keyGen.initialize(1024, random);
-//
-//            KeyPair pair = keyGen.generateKeyPair();
-//            priv = pair.getPrivate();
-//
-//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
-//            Parent root = loader.load();
-//            loginController loginController = loader.getController();
-//            load = loginController.open(stage, root, priv);
-//
-//        } catch ( NoSuchAlgorithmException |  NoSuchProviderException | IOException  e) {
-//            e.printStackTrace();
-//        }
-//        if ( load ){
-//            try {
-//
-//                credentialsList = new CredentialsList();
-//                credentialsList.addCredential("face", "ee", "bb");
-//                credentialsList.addCredential("google", "eeffff", "bb");
-//                credentialsList.addCredential("slack", "kkkk", "bb");
-//
-//                fillDataTable(credentialsList);
-//
-//            } catch (Exception e) {
-//                Alert alert = new Alert(Alert.AlertType.ERROR);
-//                alert.setContentText("Error while loading file");
-//                alert.showAndWait();
-//            }
-//        }
-//        else {
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setContentText("Error login");
-//            alert.showAndWait();
-//        }
-
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open a Credentials Database");
+        File file = fileChooser.showOpenDialog(stage);
+        credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
     }
 
     /**
@@ -180,12 +185,23 @@ public class MainViewController implements Initializable {
         dataTable.getItems().clear();
     }
 
+    /**
+     * method to handle adding a new credential through the button
+     */
+    @FXML
+    void onAddCredential(ActionEvent event) {
+        displayDetailCredential(new Credential("","", new char[] {}), -1);
+    }
+
     private void fillDataTable(CredentialsList credentialsList){
         ObservableList<Credential> obsListCredentials = FXCollections.observableArrayList(credentialsList);
         dataTable.setItems(obsListCredentials);
     }
 
     private void displayDetailCredential(Credential credential, int index){
+        if (credential == null)
+            return;
+
         Credential newC = null;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/credentialDetail.fxml"));
@@ -196,16 +212,25 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
         }
 
-//        if( newC != null ) {
-//            credentialsList.remove(credential);
-//            credentialsList.addCredential(newC, index);
-//            dataTable.getItems().clear();
-//            fillDataTable(credentialsList);
-//        }
-//        else{
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setContentText("Error adding Credential");
-//        }
+        if( newC != null ) {
+            CredentialsList list = credentialsViewModel.getCredentialsList();
+
+            if (index >= 0 ) {
+                list.remove(index);
+                list.add(index, newC);
+            }
+            else {
+                list.add(newC);
+            }
+
+            dataTable.getItems().clear();
+            fillDataTable(list);
+            credentialsViewModel.setCredentialsList(list);
+        }
+        else{
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error adding Credential");
+        }
     }
 
     public static Stage getStage() {
