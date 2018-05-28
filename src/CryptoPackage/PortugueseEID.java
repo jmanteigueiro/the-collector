@@ -281,7 +281,7 @@ public class PortugueseEID {
      * @param keys keys object with both keys
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(Security.DBKeys keys){
+    public boolean writeKeysToCC(Security.DBKeys keys) throws PTEID_Exception{
         // Initiate a StringBuilder
         StringBuilder dataToWrite = new StringBuilder();
 
