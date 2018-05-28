@@ -8,6 +8,7 @@ import Security.Security;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.*;
 
 public class CredentialsViewModelTest {
@@ -65,7 +66,11 @@ public class CredentialsViewModelTest {
 
     private void saveAllInformation(){
         config.setCredentialsList(credentialsList);
-        config = configJSON.saveConfig(config);
+        try {
+            config = configJSON.saveConfig(config);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadAllInformation(PrivateKey sk){

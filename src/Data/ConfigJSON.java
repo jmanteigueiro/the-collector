@@ -26,7 +26,7 @@ public class ConfigJSON {
      * e guarda como JSON o objeto num ficheiro.
      * @param config Objeto com a configuração
      */
-    public Config saveConfig(Config config){
+    public Config saveConfig(Config config) throws IOException {
         byte[] symmetricKey = Security.generate256BitKey();
         byte[] integrityKey = Security.generate256BitKey();
 
@@ -46,12 +46,8 @@ public class ConfigJSON {
         String configJson = gson.toJson(config);
         gson = null;
 
-        try (FileOutputStream fos = new FileOutputStream(filename)) {
-            fos.write(configJson.getBytes());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        FileOutputStream fos = new FileOutputStream(filename);
+        fos.write(configJson.getBytes());
 
         config.setSymmetricKey(symmetricKey);
         config.setIntegrityKey(integrityKey);

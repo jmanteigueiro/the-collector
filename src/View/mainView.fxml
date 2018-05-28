@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
 <?import javafx.scene.*?>
@@ -8,13 +9,13 @@
 
 <AnchorPane prefHeight="450.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.MainViewController">
     <children>
-        <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <MenuBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <menus>
                 <Menu mnemonicParsing="false" text="File">
                     <items>
                         <MenuItem fx:id="newFile" mnemonicParsing="false" onAction="#onNewFile" text="New" />
                         <MenuItem fx:id="openFile" mnemonicParsing="false" onAction="#onOpenFile" text="Open" />
-                        <MenuItem fx:id="save" mnemonicParsing="false" onAction="#onSaveFile" text="Save" />
+                        <!--<MenuItem fx:id="save" mnemonicParsing="false" onAction="#onSaveFile" text="Save" />-->
                         <MenuItem fx:id="close" mnemonicParsing="false" onAction="#onCloseFile" text="Close" />
                     </items>
                 </Menu>
@@ -30,10 +31,11 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <TableView fx:id="dataTable" layoutY="27.0" prefHeight="423.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="400.0" AnchorPane.topAnchor="27.0">
+        <TableView fx:id="dataTable" editable="true" layoutY="27.0" prefHeight="423.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="27.0">
             <columns>
-                <TableColumn prefWidth="200.0" resizable="false" text="Name" />
-                <TableColumn prefWidth="200.0" text="Password" />
+                <TableColumn fx:id="website" prefWidth="248.0" style="" text="Website" />
+                <TableColumn fx:id="name" prefWidth="324.0" text="Name" />
+                <TableColumn fx:id="password" prefWidth="227.0" text="Password" />
             </columns>
         </TableView>
     </children>

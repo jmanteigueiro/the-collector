@@ -24,6 +24,7 @@ public class CredentialsViewModel {
     private CredentialsList credentialsList;
 
     private ConfigJSON configJSON;
+    private boolean auth = false;
 
     public CredentialsViewModel(){
         initProgram();
@@ -57,7 +58,9 @@ public class CredentialsViewModel {
         }
 
         // Save after initialization so the AES symmetric key changes
-        saveAllInformation();
+        //saveAllInformation();
+
+        this.auth = false;
     }
 
     /**

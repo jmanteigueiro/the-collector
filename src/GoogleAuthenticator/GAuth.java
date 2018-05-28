@@ -107,15 +107,25 @@ public class GAuth {
     public static boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
         byte[] ciphertext = new byte[0];
 
-        gkey = config.getGkey();
+        //gkey = config.getGkey();
+        gkey = ciphertext;
 
-        String strKey = new String(gkey, "UTF-8");
 
-        if (insertedTOTP.equals(TOTPCode(strKey))){
-            return true;
+        String strKey = new String(gkey);
+        System.out.println(strKey);
+
+        try {
+            if (insertedTOTP.equals(TOTPCode(strKey))){
+                return true;
+            }
+            else
+                return false;
+        }
+        catch (IllegalArgumentException e ){
+            e.printStackTrace();
+            return false;
         }
 
-        return false;
     }
 
 

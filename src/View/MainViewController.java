@@ -6,26 +6,26 @@ import ViewModel.CredentialsViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.FileChooser;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.net.URL;
+import java.security.*;
+import java.util.ResourceBundle;
 
 
-public class MainViewController
-{
+public class MainViewController implements Initializable {
 
     private static Stage stage;
     private CredentialsViewModel credentialsViewModel;
@@ -46,6 +46,46 @@ public class MainViewController
     @FXML
     private MenuItem close;
 
+    @FXML
+    private TableColumn<Credential, String> website;
+
+    @FXML
+    private TableColumn<Credential, char[]> password;
+
+    @FXML
+    private TableColumn<Credential, String> name;
+
+
+    /**
+     * method used to initialize components
+     */
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        website.setCellValueFactory(
+                new PropertyValueFactory<>("website"));
+        name.setCellValueFactory(
+                new PropertyValueFactory<>("username"));
+        password.setCellValueFactory(
+                new PropertyValueFactory<>("password"));
+
+        website.setCellFactory(TextFieldTableCell.forTableColumn());
+        website.setOnEditCommit(event ->
+                event.getTableView().getItems().get(event.getTablePosition().getRow()).setWebsite(event.getNewValue()));
+
+        name.setCellFactory(TextFieldTableCell.forTableColumn());
+        name.setOnEditCommit(event ->
+                event.getTableView().getItems().get(event.getTablePosition().getRow()).setUsername(event.getNewValue())
+        );
+
+        dataTable.setOnMouseClicked(event -> {
+            Credential c = dataTable.getSelectionModel().getSelectedItem();
+            int index = dataTable.getSelectionModel().getSelectedIndex();
+            //System.out.println(index);
+            displayDetailCredential(c, index);
+        });
+
+    }
+
     /**
      * method to handle new file creation
      */
@@ -58,40 +98,66 @@ public class MainViewController
      */
     @FXML
     void onOpenFile(ActionEvent event) {
-        Stage stage = getStage();
 
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open passwords File");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("TheCollectorFile", "*.tclt"),
-                new FileChooser.ExtensionFilter("All files", "*.*")
-        );
-        File file = fileChooser.showOpenDialog(stage);
-        if (file != null) {
-            String fileData = file.getName();
-            // e para remover o seguinte codigo e adicionar a parte do ze
-            PrivateKey privateKey = null;
-            try{
-                File filePrivateKey = new File("/home/fabio/Documents/MEI_2017/SSS" + "/sk.pem");
-                FileInputStream fis = new FileInputStream("/home/fabio/Documents/MEI_2017/SSS" + "/sk.pem");
-                byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-                fis.read(encodedPrivateKey);
-                fis.close();
 
-                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-                privateKey = keyFactory.generatePrivate(privateKeySpec);
+//        FileChooser fileChooser = new FileChooser();
+//        fileChooser.setTitle("Open passwords File");
+//        fileChooser.getExtensionFilters().addAll(
+//                new FileChooser.ExtensionFilter("TheCollectorFile", "*.tclt"),
+//                new FileChooser.ExtensionFilter("All files", "*.*")
+//        );
+//        File file = fileChooser.showOpenDialog(stage);
+//        if (file != null) {
+//            String fileData = file.getName();
+                // decifrar com sk
+        // }
 
-            }
-            catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
-            }
+        boolean load = false;
 
             credentialsViewModel = new CredentialsViewModel();
             credentialsList = credentialsViewModel.getCredentialsList();
 
-            fillDataTable(credentialsList);
+
+        PrivateKey priv;
+        try {
+
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+            keyGen.initialize(1024, random);
+
+            KeyPair pair = keyGen.generateKeyPair();
+            priv = pair.getPrivate();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
+            Parent root = loader.load();
+            loginController loginController = loader.getController();
+            load = loginController.open(stage, root, priv);
+
+        } catch ( NoSuchAlgorithmException |  NoSuchProviderException | IOException  e) {
+            e.printStackTrace();
         }
+        if ( load ){
+            try {
+
+                credentialsList = new CredentialsList();
+                credentialsList.addCredential("face", "ee", "bb");
+                credentialsList.addCredential("google", "eeffff", "bb");
+                credentialsList.addCredential("slack", "kkkk", "bb");
+
+                fillDataTable(credentialsList);
+
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error while loading file");
+                alert.showAndWait();
+            }
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error login");
+            alert.showAndWait();
+        }
+
     }
 
     /**
@@ -99,27 +165,50 @@ public class MainViewController
      */
     @FXML
     void onSaveFile(ActionEvent event) {
-
+        boolean done = credentialsViewModel.saveInformation(credentialsList);
+        if ( !done ) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error saving file");
+            alert.showAndWait();
+        }
     }
     /**
      * method to close file
      */
     @FXML
     void onCloseFile(ActionEvent event) {
+        dataTable.getItems().clear();
+        credentialsList.dispose();
 
     }
 
     private void fillDataTable(CredentialsList credentialsList){
-        dataTable = new TableView<>();
         ObservableList<Credential> obsListCredentials = FXCollections.observableArrayList(credentialsList);
         dataTable.setItems(obsListCredentials);
 
-        TableColumn<Credential, String> columnUsername = new TableColumn<Credential, String>("Username");
-        columnUsername.setCellValueFactory(new PropertyValueFactory("username"));
-        TableColumn<Credential, char[]> columnPass = new TableColumn<Credential, char[]>("Password");
-        columnPass.setCellValueFactory(new PropertyValueFactory("password"));
+    }
 
+    private void displayDetailCredential(Credential credential, int index){
+        Credential newC = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/credentialDetail.fxml"));
+            Parent root = loader.load();
+            CredentialDetailController credentialDetailController = loader.getController();
+            newC = credentialDetailController.open(stage, root, credential);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        if( newC != null ) {
+            credentialsList.remove(credential);
+            credentialsList.addCredential(newC, index);
+            dataTable.getItems().clear();
+            fillDataTable(credentialsList);
+        }
+        else{
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error adding Credential");
+        }
     }
 
     public static Stage getStage() {
@@ -129,4 +218,5 @@ public class MainViewController
     public static void setStage(Stage stage) {
         MainViewController.stage = stage;
     }
+
 }
