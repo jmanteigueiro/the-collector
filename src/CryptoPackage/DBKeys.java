@@ -1,6 +1,8 @@
-package Security;
+package CryptoPackage;
 
-public class DBKeys {
+import java.io.Serializable;
+
+public class DBKeys implements Serializable{
     private String symmetricKey;
     private String integrityKey;
 

@@ -1,5 +1,8 @@
-package Security;
+package CryptoPackage;
 
+import Data.Helpers.GsonHelpers;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import pt.gov.cartaodecidadao.*;
 
 import java.io.*;
@@ -275,13 +278,50 @@ public class PortugueseEID {
         return result;
     }
 
+    /**
+     * Writes the keys to the CC personal notes field
+     * @param symmetricKey symmetric Key in the format of String
+     * @param integrityKey integrity key in the format of String
+     * @return true or false depending if the data was written to the card or not
+     */
+    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey){
+        DBKeys dbKeys = new DBKeys();
+            dbKeys.setIntegrityKey( Base64.getEncoder().encodeToString(integrityKey) );
+            dbKeys.setSymmetricKey( Base64.getEncoder().encodeToString(symmetricKey) );
+
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+        String json = gson.toJson(dbKeys);
+
+        // Encode it to Base64
+        String encoded = Base64.getEncoder().encodeToString(json.getBytes());
+
+        // Create a PTEID_ByteArray with the data
+        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
+
+        // Flag to obtain the result
+        boolean result = false;
+        try {
+
+            // Write the data to the card
+            // If successful, result equals true
+            // Else, result equals false
+            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+
+        // Return the result
+        return result;
+    }
+
+
 
     /**
      * Writes the keys to the CC personal notes field
      * @param keys keys object with both keys
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(Security.DBKeys keys) throws PTEID_Exception{
+    public boolean writeKeysToCC(DBKeys keys) throws PTEID_Exception{
         // Initiate a StringBuilder
         StringBuilder dataToWrite = new StringBuilder();
 
@@ -316,32 +356,24 @@ public class PortugueseEID {
         return result;
     }
 
-    public Security.DBKeys getKeysFromCC(){
+    public DBKeys getKeysFromCC(){
 
         // Initiate a DBKeys to contain both keys
-        Security.DBKeys keys = new Security.DBKeys();
-
-        // Initiate a StringBuilder to contain the data
-        StringBuilder data = new StringBuilder();
+        DBKeys keys = new DBKeys();
 
         try {
             // Read the data from the card
             String dataRead = card.readPersonalNotes();
 
-            // Decode it from Base64
-            byte[] decoded = Base64.getDecoder().decode(dataRead);
+            String decoded = new String( Base64.getDecoder().decode(dataRead) );
 
-            // Obtain the String
-            for(int i=0; i<decoded.length; i++)
-                data.append((char)decoded[i]);
-
-            // Set the keys
-            keys.setSymmetricKey(data.toString().split(">>>>>>")[1]);
-            keys.setIntegrityKey(data.toString().split(">>>>>>")[3]);
+            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+            keys = gson.fromJson(decoded, keys.getClass());
 
         } catch (PTEID_Exception e) {
             e.printStackTrace();
         }
+
         return keys;
     }
 

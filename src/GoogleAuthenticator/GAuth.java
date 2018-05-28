@@ -1,8 +1,6 @@
 package GoogleAuthenticator;
 
 import Model.Config;
-import Model.CredentialsList;
-import Security.Security;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 
@@ -12,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.PrivateKey;
 import java.security.SecureRandom;
 
 

@@ -29,7 +29,6 @@ public class MainViewController implements Initializable {
 
     private static Stage stage;
     private CredentialsViewModel credentialsViewModel;
-    private CredentialsList credentialsList;
 
     @FXML
     private MenuItem openFile;
@@ -61,6 +60,10 @@ public class MainViewController implements Initializable {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        credentialsViewModel = new CredentialsViewModel();
+
+        fillDataTable(credentialsViewModel.getCredentialsList());
+
         website.setCellValueFactory(
                 new PropertyValueFactory<>("website"));
         name.setCellValueFactory(
@@ -80,7 +83,6 @@ public class MainViewController implements Initializable {
         dataTable.setOnMouseClicked(event -> {
             Credential c = dataTable.getSelectionModel().getSelectedItem();
             int index = dataTable.getSelectionModel().getSelectedIndex();
-            //System.out.println(index);
             displayDetailCredential(c, index);
         });
 
@@ -115,48 +117,46 @@ public class MainViewController implements Initializable {
         boolean load = false;
 
             credentialsViewModel = new CredentialsViewModel();
-            credentialsList = credentialsViewModel.getCredentialsList();
 
-
-        PrivateKey priv;
-        try {
-
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-            keyGen.initialize(1024, random);
-
-            KeyPair pair = keyGen.generateKeyPair();
-            priv = pair.getPrivate();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
-            Parent root = loader.load();
-            loginController loginController = loader.getController();
-            load = loginController.open(stage, root, priv);
-
-        } catch ( NoSuchAlgorithmException |  NoSuchProviderException | IOException  e) {
-            e.printStackTrace();
-        }
-        if ( load ){
-            try {
-
-                credentialsList = new CredentialsList();
-                credentialsList.addCredential("face", "ee", "bb");
-                credentialsList.addCredential("google", "eeffff", "bb");
-                credentialsList.addCredential("slack", "kkkk", "bb");
-
-                fillDataTable(credentialsList);
-
-            } catch (Exception e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Error while loading file");
-                alert.showAndWait();
-            }
-        }
-        else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error login");
-            alert.showAndWait();
-        }
+//        PrivateKey priv;
+//        try {
+//
+//            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+//            SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+//            keyGen.initialize(1024, random);
+//
+//            KeyPair pair = keyGen.generateKeyPair();
+//            priv = pair.getPrivate();
+//
+//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/login.fxml"));
+//            Parent root = loader.load();
+//            loginController loginController = loader.getController();
+//            load = loginController.open(stage, root, priv);
+//
+//        } catch ( NoSuchAlgorithmException |  NoSuchProviderException | IOException  e) {
+//            e.printStackTrace();
+//        }
+//        if ( load ){
+//            try {
+//
+//                credentialsList = new CredentialsList();
+//                credentialsList.addCredential("face", "ee", "bb");
+//                credentialsList.addCredential("google", "eeffff", "bb");
+//                credentialsList.addCredential("slack", "kkkk", "bb");
+//
+//                fillDataTable(credentialsList);
+//
+//            } catch (Exception e) {
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setContentText("Error while loading file");
+//                alert.showAndWait();
+//            }
+//        }
+//        else {
+//            Alert alert = new Alert(Alert.AlertType.ERROR);
+//            alert.setContentText("Error login");
+//            alert.showAndWait();
+//        }
 
     }
 
@@ -165,7 +165,7 @@ public class MainViewController implements Initializable {
      */
     @FXML
     void onSaveFile(ActionEvent event) {
-        boolean done = credentialsViewModel.saveInformation(credentialsList);
+        boolean done = credentialsViewModel.saveAllInformation();
         if ( !done ) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error saving file");
@@ -178,14 +178,11 @@ public class MainViewController implements Initializable {
     @FXML
     void onCloseFile(ActionEvent event) {
         dataTable.getItems().clear();
-        credentialsList.dispose();
-
     }
 
     private void fillDataTable(CredentialsList credentialsList){
         ObservableList<Credential> obsListCredentials = FXCollections.observableArrayList(credentialsList);
         dataTable.setItems(obsListCredentials);
-
     }
 
     private void displayDetailCredential(Credential credential, int index){
@@ -199,16 +196,16 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
         }
 
-        if( newC != null ) {
-            credentialsList.remove(credential);
-            credentialsList.addCredential(newC, index);
-            dataTable.getItems().clear();
-            fillDataTable(credentialsList);
-        }
-        else{
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error adding Credential");
-        }
+//        if( newC != null ) {
+//            credentialsList.remove(credential);
+//            credentialsList.addCredential(newC, index);
+//            dataTable.getItems().clear();
+//            fillDataTable(credentialsList);
+//        }
+//        else{
+//            Alert alert = new Alert(Alert.AlertType.ERROR);
+//            alert.setContentText("Error adding Credential");
+//        }
     }
 
     public static Stage getStage() {

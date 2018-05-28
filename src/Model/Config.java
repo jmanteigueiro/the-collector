@@ -1,6 +1,6 @@
 package Model;
 
-import Security.Security;
+import CryptoPackage.Security;
 import com.google.gson.Gson;
 
 import java.io.Serializable;
@@ -35,7 +35,6 @@ public class Config implements Serializable {
         this.symmetricKey = Security.generate256BitKey();
         this.initVector = Security.generateRandomBytes(16);
         this.integrityKey = Security.generate256BitKey();
-
     }
 
     public byte[] getAuthenticationPublicKey() {
@@ -112,4 +111,17 @@ public class Config implements Serializable {
     public void setGkey(byte[] gkey) {
         this.gkey = gkey;
     }
+
+    public Config clone(){
+        Config newConfig = new Config();
+        newConfig.setCredentialsList(this.getCredentialsList());
+        newConfig.setAuthenticationPublicKey(this.getAuthenticationPublicKey());
+        newConfig.setSymmetricKey(this.getSymmetricKey());
+        newConfig.setIntegrityKey(this.getIntegrityKey());
+        newConfig.setInitVector(this.getInitVector());
+        newConfig.setHmac(this.getHmac());
+        newConfig.setGkey(this.getGkey());
+        return newConfig;
+    }
+
 }

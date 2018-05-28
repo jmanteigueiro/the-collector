@@ -1,18 +1,20 @@
 package ViewModel;
 
+import CryptoPackage.DBKeys;
 import Data.ConfigJSON;
 import Data.Exceptions.CredentialsIntegrityException;
 import GoogleAuthenticator.GAuth;
-import GoogleAuthenticator.TOTP;
 import Model.Config;
 import Model.CredentialsList;
 
-import Security.PortugueseEID;
-import Security.Security;
+import CryptoPackage.PortugueseEID;
+import CryptoPackage.Security;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
+import java.util.Base64;
 
 /**
  * Ligação entre a janela principal do programa (lista de credenciais) e os objetos.
@@ -24,7 +26,6 @@ public class CredentialsViewModel {
     private CredentialsList credentialsList;
 
     private ConfigJSON configJSON;
-    private boolean auth = false;
 
     public CredentialsViewModel(){
         initProgram();
@@ -46,21 +47,19 @@ public class CredentialsViewModel {
             }
             else {
                 // Google Authenticator
-                boolean gauthValid = false;
-                do{
-                    gauthValid = googleAuthentication();
-                }
-                while (!gauthValid);
+//                boolean gauthValid = false;
+//                do{
+//                    gauthValid = googleAuthentication();
+//                }
+//                while (!gauthValid);
             }
         }
         else {
             registerUser();
         }
-
+        credentialsList.addCredential("google","a","b");
         // Save after initialization so the AES symmetric key changes
-        //saveAllInformation();
-
-        this.auth = false;
+        saveAllInformation();
     }
 
     /**
@@ -76,7 +75,7 @@ public class CredentialsViewModel {
         // Obter resposta ao Nonce
         PortugueseEID pid = new PortugueseEID();
 
-        String nonce = Security.Security.generateNonce(256);
+        String nonce = Security.generateNonce(256);
 
         boolean verified = pid.signNonceAndVerify(nonce, Security.publicKeyFromBytes( config.getAuthenticationPublicKey() ));
 
@@ -87,10 +86,11 @@ public class CredentialsViewModel {
         // TODO: fazer google auth
 
         // Obter chaves de cifra e integridade
-        Security.DBKeys dbKeys = pid.getKeysFromCC();
+        DBKeys dbKeys = pid.getKeysFromCC();
 
-        config.setSymmetricKey( dbKeys.getSymmetricKey().getBytes() );
-        config.setIntegrityKey( dbKeys.getIntegrityKey().getBytes() );
+
+        config.setSymmetricKey( Base64.getDecoder().decode(dbKeys.getSymmetricKey()) );
+        config.setIntegrityKey( Base64.getDecoder().decode(dbKeys.getIntegrityKey()) );
 
         pid.closeConnection();
 
@@ -151,12 +151,32 @@ public class CredentialsViewModel {
      * Guarda configurações e credenciais.
      * Deve ser chamado sempre que algum destes objetos for modificado.
      */
-    private void saveAllInformation(){
+    public boolean saveAllInformation(){
         config.setCredentialsList(credentialsList);
-        config = configJSON.saveConfig(config);
+
+        Config configBackup = config.clone();
+
+        try {
+            config = configJSON.saveConfig(config);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         PortugueseEID pid = new PortugueseEID();
-        pid.writeKeysToCC(new String(config.getSymmetricKey()), new String(config.getIntegrityKey()));
+        boolean result = pid.writeKeysToCC(config.getSymmetricKey(), config.getIntegrityKey());
         pid.closeConnection();
+
+        if (!result) {
+            config = configBackup;
+            try {
+                config = configJSON.saveConfig(config);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return result;
     }
 }

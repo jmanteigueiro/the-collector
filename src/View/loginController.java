@@ -35,21 +35,21 @@ public class loginController {
     @FXML
     void onGLogin(ActionEvent event) {
         //this.auth = new CredentialsViewModel();
-        try {
-            credentialsViewModel = new CredentialsViewModel(priv, gCode.getText());
-            if (credentialsViewModel.isAuth())
-                stage.close();
-            else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Error login");
-                alert.showAndWait();
-            }
-        } catch (UnsupportedEncodingException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error login");
-            alert.showAndWait();
-        }
-
+//        try {
+//            credentialsViewModel = new CredentialsViewModel();
+//            if (true)
+//                stage.close();
+//            else {
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setContentText("Error login");
+//                alert.showAndWait();
+//            }
+//        } catch (UnsupportedEncodingException e) {
+//            Alert alert = new Alert(Alert.AlertType.ERROR);
+//            alert.setContentText("Error login");
+//            alert.showAndWait();
+//        }
+        stage.close();
     }
 
 

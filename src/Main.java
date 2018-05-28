@@ -29,7 +29,7 @@ public class Main extends Application {
         // View       - Classes de UI
         // Model      - Classes de objetos a ser utilizados na aplicação
         // View Model - Classes de acesso e modificação dos dados
-        // Security   - Classes "helpers" que contêm os métodos de segurança
+        // CryptoPackage   - Classes "helpers" que contêm os métodos de segurança
         //
         // Para obter os dados para a UI, deve invocar-se sempre métodos de classes ViewModel!
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí

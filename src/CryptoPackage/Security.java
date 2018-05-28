@@ -1,4 +1,4 @@
-package Security;
+package CryptoPackage;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;

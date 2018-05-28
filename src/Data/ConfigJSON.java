@@ -7,9 +7,8 @@ import Model.Config;
 import com.google.gson.*;
 
 import java.io.*;
-import java.security.PrivateKey;
 
-import Security.Security;
+import CryptoPackage.Security;
 
 /**
  * Classe para ler e escrever as configurações para ficheiro.
