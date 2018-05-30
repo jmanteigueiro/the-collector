@@ -106,9 +106,18 @@ public class MainViewController implements Initializable {
             System.exit(1);
         }
 
-        credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
+        //credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
 
-        fillDataTable(credentialsViewModel.getCredentialsList());
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/twofactor.fxml"));
+            Parent root = loader.load();
+            twofactorController twofauth = loader.getController();
+            twofauth.open(stage, root);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //fillDataTable(credentialsViewModel.getCredentialsList());
 
         website.setCellValueFactory(
                 new PropertyValueFactory<>("website"));

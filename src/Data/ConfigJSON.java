@@ -1,14 +1,15 @@
 package Data;
 
+import CryptoPackage.Security;
 import Data.Exceptions.CredentialsIntegrityException;
 import Data.Helpers.GsonHelpers;
-import GoogleAuthenticator.GAuth;
 import Model.Config;
-import com.google.gson.*;
+import com.google.gson.Gson;
 
-import java.io.*;
-
-import CryptoPackage.Security;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Classe para ler e escrever as configurações para ficheiro.
@@ -38,8 +39,8 @@ public class ConfigJSON {
         byte[] hmac = Security.computeHMAC(cipherCredentials, integrityKey);
         config.setHmac(hmac);
 
-        byte[] googlekey = GAuth.gkey;
-        config.setGkey(googlekey);
+       /* byte[] googlekey = GAuth.gkey;
+        config.setGkey(googlekey);*/
 
         Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);

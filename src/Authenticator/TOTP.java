@@ -1,4 +1,4 @@
-package GoogleAuthenticator; /**
+package Authenticator; /**
  Copyright (c) 2011 IETF Trust and the persons identified as
  authors of the code. All rights reserved.
 

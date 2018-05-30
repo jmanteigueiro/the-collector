@@ -1,10 +1,12 @@
-package GoogleAuthenticator;
+package Authenticator;
 
 import Model.Config;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,7 +18,8 @@ import java.security.SecureRandom;
 
 public class GAuth {
 
-    public static byte[] gkey;
+    //public static byte[] gkey;
+    public static String gkey;
 
     /**
      * Cria uma chave geradora secreta aleatória e guarda-a cifrada num ficheiro.
@@ -35,7 +38,8 @@ public class GAuth {
 
         getQRCode("TheCollector", username, key, path);
 
-        gkey = key.getBytes(StandardCharsets.ISO_8859_1);
+        //gkey = key.getBytes(StandardCharsets.ISO_8859_1);
+        gkey = key;
     }
 
 
@@ -101,15 +105,16 @@ public class GAuth {
      * @param insertedTOTP  -> Chave temporaria introduzida pelo utilizador
      * @return True se o código introduzido estiver correto, False se o código estiver errado
      */
-    public static boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
-        byte[] ciphertext = new byte[0];
-
-        //gkey = config.getGkey();
-        gkey = ciphertext;
-
-
-        String strKey = new String(gkey);
-        System.out.println(strKey);
+//    public static boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
+//        byte[] ciphertext = new byte[0];
+//
+//        //gkey = config.getGkey();
+//        gkey = ciphertext;
+//
+//
+//        String strKey = new String(gkey);
+//        System.out.println(strKey);
+    public static boolean validateTOTPCode(String strKey, String insertedTOTP) throws UnsupportedEncodingException {
 
         try {
             if (insertedTOTP.equals(TOTPCode(strKey))){
