@@ -196,4 +196,8 @@ public class CredentialsViewModel {
     public void setGoogleKey(byte[] gKey) {
         config.setGkey(gKey);
     }
+
+    public String getFilename() {
+        return fileConfig;
+    }
 }
