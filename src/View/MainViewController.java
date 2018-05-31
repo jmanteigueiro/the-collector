@@ -138,17 +138,12 @@ public class MainViewController implements Initializable {
             int index = dataTable.getSelectionModel().getSelectedIndex();
             displayDetailCredential(c, index);
         });
-
-        stage.setOnCloseRequest((WindowEvent event) -> {
-            showExitDialog(true);
-        });
-
     }
 
     /**
      * Show exit dialog
      */
-    private void showExitDialog(boolean areCredentialsOpen){
+    public void showExitDialog(boolean areCredentialsOpen){
         Alert alert;
         Optional<ButtonType> result;
         if (credentialsViewModel.isCredentialsChanged() && areCredentialsOpen) {
@@ -266,10 +261,6 @@ public class MainViewController implements Initializable {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error adding Credential");
         }
-    }
-
-    public Stage getStage() {
-        return stage;
     }
 
     public void setStage(Stage stage) {
