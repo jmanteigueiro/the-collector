@@ -3,7 +3,7 @@ package ViewModel;
 import CryptoPackage.DBKeys;
 import Data.ConfigJSON;
 import Data.Exceptions.CredentialsIntegrityException;
-import GoogleAuthenticator.GAuth;
+import Authenticator.GAuth;
 import Model.Config;
 import Model.CredentialsList;
 
