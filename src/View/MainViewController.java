@@ -115,8 +115,8 @@ public class MainViewController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/twofactor.fxml"));
             Parent root = loader.load();
-            twofactorController twofauth = loader.getController();
-            twofauth.open(stage, root);
+            TwoFactorController twofauth = loader.getController();
+            twofauth.open(stage, root, credentialsViewModel);
         } catch (IOException e) {
             e.printStackTrace();
         }

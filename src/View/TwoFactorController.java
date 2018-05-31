@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 
-public class twofactorController {
+public class TwoFactorController {
 
 
     @FXML
@@ -33,50 +33,39 @@ public class twofactorController {
     @FXML
     private Button authokbutton;
 
+    private Stage stage;
 
-    Stage stage;
+    private byte[] code = null;
+
+    private int counter = 0;
+
+    private boolean control = true;
+    private boolean firsttime = false;
+
+    private CredentialsViewModel credentialsViewModel;
 
 
-    byte[] code = null;
-
-    int counter = 0;
-
-    boolean control = true;
-    boolean firsttime = false;
-
-
-    protected void open(Stage parentStage, Parent root) throws IOException {
+    protected void open(Stage parentStage, Parent root, CredentialsViewModel viewModel) throws IOException {
+        this.credentialsViewModel = viewModel;
         initialize(root, parentStage); // initialize scene, listeners and opens stage
-
-
     }
 
     private void initialize( Parent root, Stage parentStage) throws IOException {
-
-         stage = new Stage();
-
+        stage = new Stage();
 
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-
             //Encriptar o config
-
             public void handle(WindowEvent we) {
                 System.exit(1);
             }
         });
 
+        byte[] gKey = credentialsViewModel.getGoogleKey();
 
-        String line = null;
-
-        System.out.println(CredentialsViewModel.config);
-
-
-        if (CredentialsViewModel.config.getGkey() != null){
-
-            code=CredentialsViewModel.config.getGkey();
-
-        }else {
-
+        if (gKey != null){
+            code = gKey;
+        }
+        else {
             GAuth.NewGoogleAuthenticator("andre");
 
             code = GAuth.gkey;
@@ -87,10 +76,8 @@ public class twofactorController {
 
             firsttime = true;
 
-            CredentialsViewModel.config.setGkey(code);
+            credentialsViewModel.setGoogleKey(code);
         }
-
-
 
         try {
             Scene scene = new Scene(root);
@@ -99,7 +86,6 @@ public class twofactorController {
             stage.setScene(scene);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(parentStage);
-
             stage.showAndWait();
 
         } catch (Exception e) {
@@ -109,7 +95,7 @@ public class twofactorController {
 
     @FXML
     void validar(ActionEvent event) throws UnsupportedEncodingException, InterruptedException {
-        Boolean valid = GAuth.validateTOTPCode(CredentialsViewModel.config.getGkey(), authcodefield.getText());
+        Boolean valid = GAuth.validateTOTPCode(credentialsViewModel.getGoogleKey(), authcodefield.getText());
         if (counter < 5 && control==true)
         {
             if (valid){

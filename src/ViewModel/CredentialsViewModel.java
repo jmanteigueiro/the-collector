@@ -21,7 +21,7 @@ import java.util.Base64;
 public class CredentialsViewModel {
     private String fileConfig = "creddb.cfg";
 
-    public static Config config;
+    public Config config;
     private CredentialsList credentialsList;
     private byte[] credentialsHash;
     private boolean credentialsChanged = false;
@@ -187,5 +187,13 @@ public class CredentialsViewModel {
 
     public boolean isCredentialsChanged() {
         return credentialsChanged;
+    }
+
+    public byte[] getGoogleKey() {
+        return config.getGkey();
+    }
+
+    public void setGoogleKey(byte[] gKey) {
+        config.setGkey(gKey);
     }
 }
