@@ -1,19 +1,16 @@
 package ViewModel;
 
 import CryptoPackage.DBKeys;
-import Data.ConfigJSON;
-import Data.Exceptions.CredentialsIntegrityException;
-import GoogleAuthenticator.GAuth;
-import Model.Config;
-import Model.CredentialsList;
-
 import CryptoPackage.PortugueseEID;
 import CryptoPackage.Security;
+import Data.ConfigJSON;
+import Data.Exceptions.CredentialsIntegrityException;
+import Model.Config;
+import Model.CredentialsList;
 import javafx.scene.control.Alert;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 import java.util.Base64;
 
@@ -23,7 +20,7 @@ import java.util.Base64;
 public class CredentialsViewModel {
     private String fileConfig = "creddb.cfg";
 
-    private Config config;
+    public static Config config;
     private CredentialsList credentialsList;
 
     private ConfigJSON configJSON;
@@ -51,14 +48,6 @@ public class CredentialsViewModel {
                 // Registar user outra vez
                 registerUser();
             }
-            else {
-                // Google Authenticator
-//                boolean gauthValid = false;
-//                do{
-//                    gauthValid = googleAuthentication();
-//                }
-//                while (!gauthValid);
-            }
         }
         else {
             registerUser();
@@ -74,6 +63,7 @@ public class CredentialsViewModel {
     private void loadAllInformation() {
         // Carregar chave pública e dados cifrados
         config = configJSON.loadConfig();
+        System.out.println(config.getGkey());
 
         if (config.getAuthenticationPublicKey() == null)
             return;
@@ -140,29 +130,9 @@ public class CredentialsViewModel {
 
         pid.closeConnection();
 
-        String gKey = GAuth.generateNewKey();
-        config.setGkey(gKey.getBytes());
         // TODO: Devolver o QR Code da Google Key - André Rodrigues
     }
 
-    /**
-     * Método que faz a autenticação com as OTPs do Google Authenticator
-     * @return boolean que indica se a OTP é válida ou não
-     */
-    private boolean googleAuthentication() {
-        try {
-            // TODO: Receber código do telemóvel do utilizador
-            String QRCode = null;
-            // Validar o código introduzido pelo utilizador
-            boolean TOTPValid = GAuth.validateTOTPCode(config, QRCode);
-
-            return TOTPValid;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
 
     /**
      * Guarda configurações e credenciais.

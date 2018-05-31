@@ -18,8 +18,8 @@ import java.security.SecureRandom;
 
 public class GAuth {
 
-    //public static byte[] gkey;
-    public static String gkey;
+    public static byte[] gkey;
+    //public static String gkey;
 
     /**
      * Cria uma chave geradora secreta aleatória e guarda-a cifrada num ficheiro.
@@ -32,14 +32,14 @@ public class GAuth {
      * @param path      -> Localização do ficheiro que vai guardar a chave
      * @throws IOException
      */
-    public static void NewGoogleAuthenticator(String username, String path) throws IOException {
+    public static void NewGoogleAuthenticator(String username) throws IOException {
 
         String key = generateNewKey();
 
-        getQRCode("TheCollector", username, key, path);
+        getQRCode("TheCollector", username, key);
 
-        //gkey = key.getBytes(StandardCharsets.ISO_8859_1);
-        gkey = key;
+        gkey = key.getBytes(StandardCharsets.ISO_8859_1);
+        //gkey = key;
     }
 
 
@@ -68,13 +68,13 @@ public class GAuth {
      * @param PNGPath  -> Localização do QR code
      * @throws IOException
      */
-    public static void getQRCode(String issuer, String user, String key, String PNGPath) throws IOException {
+    public static void getQRCode(String issuer, String user, String key) throws IOException {
 
         String format = "https://www.google.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=otpauth://totp/%s+(%s)%%3Fsecret%%3D%s";
 
         try {
             InputStream img = new URL(String.format(format, issuer, user, key)).openStream();
-            Files.copy(img, Paths.get(PNGPath+"QRcode.png"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(img, Paths.get("QRcode.png"), StandardCopyOption.REPLACE_EXISTING);
         }catch (IOException e){
 
             throw new IOException(e);
@@ -102,19 +102,16 @@ public class GAuth {
      * Valida os códigos temporários inseridos pelo utilizador (que este lê do telemóvel).
      *
      * @param key           -> Chave gerada por generateNewKey()
+     * @param config
      * @param insertedTOTP  -> Chave temporaria introduzida pelo utilizador
      * @return True se o código introduzido estiver correto, False se o código estiver errado
      */
-//    public static boolean validateTOTPCode(Config config, String insertedTOTP) throws UnsupportedEncodingException {
-//        byte[] ciphertext = new byte[0];
-//
-//        //gkey = config.getGkey();
-//        gkey = ciphertext;
-//
-//
-//        String strKey = new String(gkey);
-//        System.out.println(strKey);
-    public static boolean validateTOTPCode(String strKey, String insertedTOTP) throws UnsupportedEncodingException {
+    public static boolean validateTOTPCode(byte[] configkey, String insertedTOTP) throws UnsupportedEncodingException {
+
+        gkey = configkey;
+
+
+        String strKey = new String(gkey);
 
         try {
             if (insertedTOTP.equals(TOTPCode(strKey))){
