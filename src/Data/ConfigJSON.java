@@ -40,7 +40,7 @@ public class ConfigJSON {
         PortugueseEID pteid = new PortugueseEID();
         byte[] hmac = pteid.signBytes(cipherCredentials);// Security.computeHMAC(cipherCredentials, integrityKey);
         pteid.closeConnection();
-        config.setHmac(hmac);
+        config.setDigitalSignature(hmac);
 
        /* byte[] googlekey = GAuth.gkey;
         config.setGkey(googlekey);*/
@@ -91,7 +91,7 @@ public class ConfigJSON {
 
     public Config decryptConfig(Config config) throws CredentialsIntegrityException {
         PortugueseEID pteid = new PortugueseEID();
-        if (!pteid.verifySignature(config.getCredentialsBytes(), config.getHmac()))
+        if (!pteid.verifySignature(config.getCredentialsBytes(), config.getDigitalSignature()))
             throw new CredentialsIntegrityException();
         pteid.closeConnection();
 

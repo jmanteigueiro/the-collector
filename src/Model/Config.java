@@ -24,8 +24,8 @@ public class Config implements Serializable {
     /*** Chave de integridade para calculo de HMAC-SHA256 */
     private transient byte[] integrityKey;
 
-    /*** Último HMAC-SHA256 das credenciais calculado */
-    private byte[] hmac;
+    /*** Última assinatura digital das credenciais calculada, para efeitos de integridade */
+    private byte[] digitalSignature;
 
     /** Google Key*/
     private byte[] gkey;
@@ -69,12 +69,12 @@ public class Config implements Serializable {
         this.integrityKey = integrityKey;
     }
 
-    public byte[] getHmac() {
-        return hmac;
+    public byte[] getDigitalSignature() {
+        return digitalSignature;
     }
 
-    public void setHmac(byte[] hmac) {
-        this.hmac = hmac;
+    public void setDigitalSignature(byte[] digitalSignature) {
+        this.digitalSignature = digitalSignature;
     }
 
     public byte[] getCredentialsBytes() {
@@ -119,7 +119,7 @@ public class Config implements Serializable {
         newConfig.setSymmetricKey(this.getSymmetricKey());
         newConfig.setIntegrityKey(this.getIntegrityKey());
         newConfig.setInitVector(this.getInitVector());
-        newConfig.setHmac(this.getHmac());
+        newConfig.setDigitalSignature(this.getDigitalSignature());
         newConfig.setGkey(this.getGkey());
         return newConfig;
     }
