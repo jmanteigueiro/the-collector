@@ -39,7 +39,7 @@ public class ConfigJSON {
         byte[] hmac = Security.computeHMAC(cipherCredentials, integrityKey);
         config.setHmac(hmac);
 
-        byte[] googlekey = GAuth.gkey;
+        byte[] googlekey = config.getGkey();
         config.setGkey(googlekey);
 
         Gson gson = GsonHelpers.buildCustomGson();
