@@ -176,6 +176,10 @@ public class PortugueseEID {
         }
     }
 
+    public String getName() throws PTEID_Exception {
+        return card.getID().getGivenName() + card.getID().getSurname();
+    }
+
     /**
      * Retrieves the public key from a file
      *

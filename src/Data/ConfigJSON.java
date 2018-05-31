@@ -6,7 +6,7 @@ import Data.Exceptions.CredentialsIntegrityException;
 import Data.Helpers.GsonHelpers;
 import Model.Config;
 import com.google.gson.Gson;
-
+import Authenticator.GAuth;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -42,8 +42,8 @@ public class ConfigJSON {
         pteid.closeConnection();
         config.setDigitalSignature(hmac);
 
-       /* byte[] googlekey = GAuth.gkey;
-        config.setGkey(googlekey);*/
+        byte[] googlekey = config.getGkey();
+        config.setGkey(googlekey);
 
         Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);
@@ -81,7 +81,7 @@ public class ConfigJSON {
 
         Gson gson = GsonHelpers.buildCustomGson();
         config = gson.fromJson(new String(wholeConfig), config.getClass());
-        gson = null;
+        //gson = null;
 
         if (config == null)
             return new Config();

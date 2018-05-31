@@ -52,6 +52,7 @@ public class MainViewController implements Initializable {
     @FXML
     private TableColumn<Credential, String> name;
 
+    public static String filename = null;
 
     /**
      * method used to initialize components
@@ -106,7 +107,9 @@ public class MainViewController implements Initializable {
             System.exit(1);
         }
 
-        //credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
+        credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
+
+        filename = file.getAbsolutePath();
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/twofactor.fxml"));
@@ -117,7 +120,7 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
         }
 
-        //fillDataTable(credentialsViewModel.getCredentialsList());
+        fillDataTable(credentialsViewModel.getCredentialsList());
 
         website.setCellValueFactory(
                 new PropertyValueFactory<>("website"));

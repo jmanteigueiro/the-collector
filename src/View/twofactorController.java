@@ -2,6 +2,7 @@ package View;
 
 
 import Authenticator.GAuth;
+import ViewModel.CredentialsViewModel;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -15,7 +16,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 
 public class twofactorController {
@@ -34,7 +37,7 @@ public class twofactorController {
     Stage stage;
 
 
-    String code = null;
+    byte[] code = null;
 
     int counter = 0;
 
@@ -63,62 +66,28 @@ public class twofactorController {
         });
 
 
-
-        //ir ao config ver se o codigo existe
-        //se não existe cria-se um novo
-        //
-
-        String fileName = "/home/arodrigues/Desktop/codeauth.txt";
-
         String line = null;
 
+        System.out.println(CredentialsViewModel.config);
 
 
-        File f = new File("/home/arodrigues/Desktop/codeauth.txt");
+        if (CredentialsViewModel.config.getGkey() != null){
 
-        if(f.exists() && !f.isDirectory()) {
-            // do something
-
-        try {
-            FileReader fileReader = new FileReader(fileName);
-
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            while((line = bufferedReader.readLine()) != null) {
-                code = line;
-            }
-            bufferedReader.close();
-        }
-        catch(FileNotFoundException ex) {
-            System.out.println(
-                    "Unable to open file '" +
-                            fileName + "'");
-        }
-
+            code=CredentialsViewModel.config.getGkey();
 
         }else {
 
-            GAuth.NewGoogleAuthenticator("andre", "/home/arodrigues/Desktop/");
+            GAuth.NewGoogleAuthenticator("andre");
 
             code = GAuth.gkey;
 
-            File file = new File("/home/arodrigues/Desktop/QRcode.png");
+            File file = new File("QRcode.png");
             Image image = new Image(file.toURI().toString());
             authimg.setImage(image);
 
             firsttime = true;
 
-            FileWriter fileWriter =
-                    new FileWriter(fileName);
-
-            // Always wrap FileWriter in BufferedWriter.
-            BufferedWriter bufferedWriter =
-                    new BufferedWriter(fileWriter);
-
-            // Note that write() does not automatically
-            // append a newline character.
-            bufferedWriter.write(String.valueOf(GAuth.gkey));
-            bufferedWriter.close();
+            CredentialsViewModel.config.setGkey(code);
         }
 
 
@@ -140,13 +109,13 @@ public class twofactorController {
 
     @FXML
     void validar(ActionEvent event) throws UnsupportedEncodingException, InterruptedException {
-        Boolean valid = GAuth.validateTOTPCode(code, authcodefield.getText());
+        Boolean valid = GAuth.validateTOTPCode(CredentialsViewModel.config.getGkey(), authcodefield.getText());
         if (counter < 5 && control==true)
         {
             if (valid){
                 System.out.println("Valido!");
                 if (firsttime == true){
-                    File file = new File("/home/arodrigues/Desktop/QRcode.png");
+                    File file = new File("QRcode.png");
 
                     file.delete();
                 }
@@ -162,7 +131,7 @@ public class twofactorController {
         }
         else {
             //delete config file
-            File file = new File("/home/arodrigues/Desktop/codeauth.txt");
+            File file = new File(MainViewController.filename);
 
             file.delete();
             System.exit(1);
