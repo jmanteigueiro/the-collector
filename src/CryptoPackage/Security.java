@@ -154,7 +154,7 @@ public class Security {
         byte[] bytes = null;
 
         try {
-            SecureRandom randomSecureRandom = SecureRandom.getInstanceStrong();
+            SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
             bytes = new byte[blockSize];
             randomSecureRandom.nextBytes(bytes);
         } catch (NoSuchAlgorithmException e) {
@@ -172,7 +172,7 @@ public class Security {
         byte[] key = null;
 
         try {
-            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+            SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256, secureRandom);
             SecretKey s = keyGenerator.generateKey();
