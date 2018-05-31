@@ -209,7 +209,6 @@ public class Security {
     /**
      *
      * @param size // 88 tg make a 128 nonce
-     * @param date // Get the date to use as counter --> String dateTimeString = new Date().toString();
      * @return The nonce as S tring
      */
     public static String generateNonce(int size){
@@ -237,5 +236,15 @@ public class Security {
         return nonce.toString();
     }
 
+    public static byte[] computeHash(byte[] value){
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        assert digest != null;
+        return digest.digest(value);
+    }
 
 }

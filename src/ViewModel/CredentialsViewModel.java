@@ -23,6 +23,8 @@ public class CredentialsViewModel {
 
     public static Config config;
     private CredentialsList credentialsList;
+    private byte[] credentialsHash;
+    private boolean credentialsChanged = false;
 
     private ConfigJSON configJSON;
 
@@ -54,7 +56,8 @@ public class CredentialsViewModel {
             registerUser();
         }
 
-        // Save after initialization so the AES symmetric key changes
+        // Save after initialization so the AES symmetric key and the Integrity key change
+        credentialsChanged = true;
         saveAllInformation();
     }
 
@@ -105,6 +108,7 @@ public class CredentialsViewModel {
         }
 
         credentialsList = config.getCredentialsList();
+        credentialsHash = Security.computeHash( credentialsList.toByteArray() );
     }
 
     public CredentialsList getCredentialsList() {
@@ -130,8 +134,6 @@ public class CredentialsViewModel {
         config.setAuthenticationPublicKey( publicKey.getEncoded() );
 
         pid.closeConnection();
-
-        // TODO: Devolver o QR Code da Google Key - André Rodrigues
     }
 
 
@@ -140,6 +142,10 @@ public class CredentialsViewModel {
      * Deve ser chamado sempre que algum destes objetos for modificado.
      */
     public boolean saveAllInformation(){
+        if (!credentialsChanged){
+            return true;
+        }
+
         config.setCredentialsList(credentialsList);
 
         Config configBackup = config.clone();
@@ -165,6 +171,21 @@ public class CredentialsViewModel {
             }
         }
 
+        credentialsChanged = false;
+
         return result;
+    }
+
+    public byte[] getCredentialsHash() {
+        return credentialsHash;
+    }
+
+    public void setCredentialsHash(byte[] credentialsHash) {
+        this.credentialsHash = credentialsHash;
+        credentialsChanged = true;
+    }
+
+    public boolean isCredentialsChanged() {
+        return credentialsChanged;
     }
 }

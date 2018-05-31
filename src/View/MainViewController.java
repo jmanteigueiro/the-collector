@@ -1,5 +1,6 @@
 package View;
 
+import CryptoPackage.Security;
 import Model.Credential;
 import Model.CredentialsList;
 import ViewModel.CredentialsViewModel;
@@ -149,6 +150,21 @@ public class MainViewController implements Initializable {
     private void showExitDialog(){
         Alert alert;
         Optional<ButtonType> result;
+        if (credentialsViewModel.isCredentialsChanged()) {
+            alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("There are changes that haven't been saved. Do you want to save them now?");
+            result = alert.showAndWait();
+
+            ButtonType buttonTypeSave = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+            ButtonType buttonTypeCancel = new ButtonType("No", ButtonBar.ButtonData.NO);
+
+            alert.getButtonTypes().setAll(buttonTypeSave, buttonTypeCancel);
+
+            if (result.get() == buttonTypeSave) {
+                credentialsViewModel.saveAllInformation();
+            }
+        }
+
         alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setContentText("Are you sure you want to exit The Collector?");
         result = alert.showAndWait();
@@ -233,6 +249,12 @@ public class MainViewController implements Initializable {
             }
             else {
                 list.add(newC);
+            }
+
+            // Check if list was edited
+            byte[] hash = Security.computeHash(list.toByteArray());
+            if (! hash.equals( credentialsViewModel.getCredentialsHash() )){
+                credentialsViewModel.setCredentialsHash(hash);
             }
 
             dataTable.getItems().clear();
