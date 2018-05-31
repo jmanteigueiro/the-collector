@@ -178,6 +178,7 @@ public class PortugueseEID {
 
     /**
      * Retrieves the public key from a file
+     *
      * @param pathToFile String with the path to the public key
      * @return PublicKey object
      */
@@ -243,11 +244,12 @@ public class PortugueseEID {
 
     /**
      * Writes the keys to the CC personal notes field
+     *
      * @param symmetricKey symmetric Key in the format of String
      * @param integrityKey integrity key in the format of String
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(String symmetricKey, String integrityKey){
+    public boolean writeKeysToCC(String symmetricKey, String integrityKey) {
         // Initiate a StringBuilder
         StringBuilder dataToWrite = new StringBuilder();
 
@@ -284,14 +286,15 @@ public class PortugueseEID {
 
     /**
      * Writes the keys to the CC personal notes field
+     *
      * @param symmetricKey symmetric Key in the format of String
      * @param integrityKey integrity key in the format of String
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey){
+    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey) {
         DBKeys dbKeys = new DBKeys();
-            dbKeys.setIntegrityKey( Base64.getEncoder().encodeToString(integrityKey) );
-            dbKeys.setSymmetricKey( Base64.getEncoder().encodeToString(symmetricKey) );
+        dbKeys.setIntegrityKey(Base64.getEncoder().encodeToString(integrityKey));
+        dbKeys.setSymmetricKey(Base64.getEncoder().encodeToString(symmetricKey));
 
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(dbKeys);
@@ -319,13 +322,13 @@ public class PortugueseEID {
     }
 
 
-
     /**
      * Writes the keys to the CC personal notes field
+     *
      * @param keys keys object with both keys
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(DBKeys keys) throws PTEID_Exception{
+    public boolean writeKeysToCC(DBKeys keys) throws PTEID_Exception {
         // Initiate a StringBuilder
         StringBuilder dataToWrite = new StringBuilder();
 
@@ -360,7 +363,7 @@ public class PortugueseEID {
         return result;
     }
 
-    public DBKeys getKeysFromCC(){
+    public DBKeys getKeysFromCC() {
 
         // Initiate a DBKeys to contain both keys
         DBKeys keys = new DBKeys();
@@ -369,7 +372,7 @@ public class PortugueseEID {
             // Read the data from the card
             String dataRead = card.readPersonalNotes();
 
-            String decoded = new String( Base64.getDecoder().decode(dataRead) );
+            String decoded = new String(Base64.getDecoder().decode(dataRead));
 
             Gson gson = new GsonBuilder().disableHtmlEscaping().create();
             keys = gson.fromJson(decoded, keys.getClass());
@@ -385,6 +388,7 @@ public class PortugueseEID {
     /**
      * Close the connection to the card.
      * Needs to be called in the end (when the connection is open)
+     *
      * @return true is connection is closed, false if otherwise
      */
     public boolean closeConnection() {
@@ -397,37 +401,83 @@ public class PortugueseEID {
         return true;
     }
 
-//    public static void main(String[] args) {
-//        PortugueseEID pid = new PortugueseEID();
-//         pid.writePublicKeyToFile();
-//
-//        pid.closeConnection();
-//    }
-//
-//    public static void main(String[] args) {
-//        PortugueseEID pid = new PortugueseEID();
-//        // TESTING
-//        PublicKey pk2 = pid.getPublicKey();
-//        System.out.println(pk2);
-//        pid.writePublicKeyToFile();
-//        PublicKey pk1 = pid.getPublicKeyFromFile("pk.pem");
-//        if(pk1.equals(pk2))
-//            System.out.println("True");
-//        else
-//            System.out.println("False");
-//
-//
-//        DBKeys keys = new DBKeys();
-//        boolean writeResult;// = pid.writeKeysToCC("123", "345");
-//        keys.setIntegrityKey("234");
-//        keys.setSymmetricKey("567");
-//        writeResult = pid.writeKeysToCC(keys);
-//        System.out.println(writeResult);
-//
-//        pid.getKeysFromCC();
-//        //System.out.println(keys.getIntegrityKey());
-//        //System.out.println(keys.getSymmetricKey());
-//        pid.closeConnection();
-//    }
+    /**
+     * Sign a string using CC
+     * @param bytes value to be signed
+     * @return digital signature
+     */
+    public byte[] signBytes(byte[] bytes) {
 
+        // Get SHA-256
+        MessageDigest hash = null;
+        try {
+            hash = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        // Hash the nonce with SHA-256 before signing
+        byte[] hashBytes = new byte[0];
+        assert hash != null;
+        hashBytes = hash.digest(bytes);
+
+        // Create a PTEID_ByteArray with the hashed nonce
+        PTEID_ByteArray pBAhashedNonce = new PTEID_ByteArray(hashBytes, hashBytes.length);
+
+        // Sign the PTEID_ByteArray
+        PTEID_ByteArray pBAsignature = null;
+        try {
+            pBAsignature = card.Sign(pBAhashedNonce, true);
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+
+        return pBAsignature.GetBytes();
+    }
+
+    /**
+     * Verify a signature using CC
+     * @param value value previously signed
+     * @param signature signature bytes
+     * @return true if signature is verified, false otherwise
+     */
+    public boolean verifySignature(byte[] value, byte[] signature) {
+        // Get Public Key from the card
+        PublicKey pk = getPublicKey();
+
+        // Get a Signature object with SHA256withRSA (what the PortugueseEID card supports)
+        Signature sha256withRSA = null;
+        try {
+            sha256withRSA = Signature.getInstance("SHA256withRSA");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        // Init the Signature with the public key
+        try {
+            assert sha256withRSA != null;
+            sha256withRSA.initVerify(pk);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+
+        // Pass the nonce to be verified
+        try {
+            sha256withRSA.update(value);
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
+
+        // Obtain the result. True if the signature is valid, false if otherwise
+        boolean result = false;
+        try {
+            assert signature != null;
+            result = sha256withRSA.verify(signature);
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
+
+        // Return the result
+        return result;
+    }
 }

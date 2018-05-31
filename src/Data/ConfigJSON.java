@@ -1,5 +1,6 @@
 package Data;
 
+import CryptoPackage.PortugueseEID;
 import CryptoPackage.Security;
 import Data.Exceptions.CredentialsIntegrityException;
 import Data.Helpers.GsonHelpers;
@@ -36,8 +37,10 @@ public class ConfigJSON {
         byte[] cipherCredentials = Security.encryptAES(config.getCredentialsBytes(), symmetricKey, initializationVector);
         config.setCredentialsBytes(cipherCredentials);
 
-        byte[] hmac = Security.computeHMAC(cipherCredentials, integrityKey);
-        config.setHmac(hmac);
+        PortugueseEID pteid = new PortugueseEID();
+        byte[] hmac = pteid.signBytes(cipherCredentials);// Security.computeHMAC(cipherCredentials, integrityKey);
+        pteid.closeConnection();
+        config.setDigitalSignature(hmac);
 
        /* byte[] googlekey = GAuth.gkey;
         config.setGkey(googlekey);*/
@@ -87,8 +90,10 @@ public class ConfigJSON {
     }
 
     public Config decryptConfig(Config config) throws CredentialsIntegrityException {
-        if (! Security.verifyHMAC(config.getCredentialsBytes(), config.getHmac(), config.getIntegrityKey()) )
+        PortugueseEID pteid = new PortugueseEID();
+        if (!pteid.verifySignature(config.getCredentialsBytes(), config.getDigitalSignature()))
             throw new CredentialsIntegrityException();
+        pteid.closeConnection();
 
         byte[] plainCredentials = Security.decryptAES(config.getCredentialsBytes(), config.getSymmetricKey(), config.getInitVector());
         config.setCredentialsBytes(plainCredentials);
