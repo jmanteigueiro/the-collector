@@ -1,5 +1,8 @@
 package Model;
 
+import Data.Helpers.GsonHelpers;
+import com.google.gson.Gson;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
@@ -34,24 +37,13 @@ public class CredentialsList extends ArrayList<Credential> {
         this.add(index, c);
     }
 
+    /**
+     * Transforms the list into a byte array of a json
+     * @return
+     */
     public byte[] toByteArray(){
-        byte[] bytes = new byte[0];
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        try {
-            out = new ObjectOutputStream(bos);
-            out.writeObject(this);
-            out.flush();
-            bytes = bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return bytes;
+        Gson gson = GsonHelpers.buildCustomGson();
+        String string = gson.toJson(this);
+        return string.getBytes();
     }
 }
