@@ -25,7 +25,7 @@ public class CredentialsViewModel {
     private CredentialsList credentialsList;
     private byte[] credentialsHash;
     private boolean credentialsChanged = false;
-
+    private String ownerName;
     private ConfigJSON configJSON;
 
     public CredentialsViewModel() {
@@ -59,6 +59,10 @@ public class CredentialsViewModel {
         // Save after initialization so the AES symmetric key and the Integrity key change
         credentialsChanged = true;
         saveAllInformation();
+    }
+
+    public String getOwnerName(){
+        return ownerName;
     }
 
     /**
@@ -130,7 +134,7 @@ public class CredentialsViewModel {
 
         PortugueseEID pid = new PortugueseEID();
         PublicKey publicKey = pid.getPublicKey();
-
+        ownerName = pid.getOwnerName();
         config.setAuthenticationPublicKey( publicKey.getEncoded() );
 
         pid.closeConnection();
@@ -195,5 +199,9 @@ public class CredentialsViewModel {
 
     public void setGoogleKey(byte[] gKey) {
         config.setGkey(gKey);
+    }
+
+    public String getFilename() {
+        return fileConfig;
     }
 }

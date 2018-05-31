@@ -22,8 +22,7 @@ import java.io.UnsupportedEncodingException;
 
 
 public class TwoFactorController {
-
-
+    
     @FXML
     private TextField authcodefield;
 
@@ -41,6 +40,7 @@ public class TwoFactorController {
 
     private boolean control = true;
     private boolean firsttime = false;
+
 
     private CredentialsViewModel credentialsViewModel;
 
@@ -66,7 +66,7 @@ public class TwoFactorController {
             code = gKey;
         }
         else {
-            GAuth.NewGoogleAuthenticator("andre");
+            GAuth.NewGoogleAuthenticator(new String(credentialsViewModel.getOwnerName()));
 
             code = GAuth.gkey;
 
@@ -117,7 +117,7 @@ public class TwoFactorController {
         }
         else {
             //delete config file
-            File file = new File(MainViewController.filename);
+            File file = new File(credentialsViewModel.getFilename());
 
             file.delete();
             System.exit(1);

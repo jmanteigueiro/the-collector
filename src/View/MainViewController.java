@@ -53,8 +53,6 @@ public class MainViewController implements Initializable {
     @FXML
     private TableColumn<Credential, String> name;
 
-    public static String filename = null;
-
     /**
      * method used to initialize components
      */
@@ -109,8 +107,6 @@ public class MainViewController implements Initializable {
         }
 
         credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
-
-        filename = file.getAbsolutePath();
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/twofactor.fxml"));

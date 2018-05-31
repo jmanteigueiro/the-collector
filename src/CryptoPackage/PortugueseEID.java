@@ -205,6 +205,22 @@ public class PortugueseEID {
         }
     }
 
+    public String getOwnerName() {
+        String capitalizedName = null;
+        try {
+            capitalizedName = card.getID().getGivenName();
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+        String[] substrings = capitalizedName.split(" ");
+        StringBuilder sb = new StringBuilder("");
+        for (String substring : substrings) {
+            sb.append(substring.substring(0, 1)).append(substring.substring(1, substring.length()).toLowerCase()).append("_");
+        }
+        sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
+    }
+
     /**
      * Get the Public Key from the PortugueseEID card
      *
