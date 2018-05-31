@@ -16,6 +16,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
 
-    private static Stage stage;
+    private Stage stage;
     private CredentialsViewModel credentialsViewModel;
 
     @FXML
@@ -82,7 +83,7 @@ public class MainViewController implements Initializable {
                 file = fileChooser.showOpenDialog(stage);
 
                 if (file == null)
-                    showExitDialog();
+                    showExitDialog(false);
             }
             while (file == null);
         }
@@ -98,7 +99,7 @@ public class MainViewController implements Initializable {
                 file = fileChooser.showSaveDialog(stage);
 
                 if (file == null)
-                    showExitDialog();
+                    showExitDialog(false);
             }
             while (file == null);
         }
@@ -138,15 +139,19 @@ public class MainViewController implements Initializable {
             displayDetailCredential(c, index);
         });
 
+        stage.setOnCloseRequest((WindowEvent event) -> {
+            showExitDialog(true);
+        });
+
     }
 
     /**
      * Show exit dialog
      */
-    private void showExitDialog(){
+    private void showExitDialog(boolean areCredentialsOpen){
         Alert alert;
         Optional<ButtonType> result;
-        if (credentialsViewModel.isCredentialsChanged()) {
+        if (credentialsViewModel.isCredentialsChanged() && areCredentialsOpen) {
             alert = new Alert(Alert.AlertType.WARNING);
             alert.setContentText("There are changes that haven't been saved. Do you want to save them now?");
             result = alert.showAndWait();
@@ -263,12 +268,12 @@ public class MainViewController implements Initializable {
         }
     }
 
-    public static Stage getStage() {
+    public Stage getStage() {
         return stage;
     }
 
-    public static void setStage(Stage stage) {
-        MainViewController.stage = stage;
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 
 }

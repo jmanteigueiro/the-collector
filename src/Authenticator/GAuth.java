@@ -29,7 +29,6 @@ public class GAuth {
      * Este método APENAS deve ser usado na PRIMEIRA VEZ que o programa é executado ou se for necessário usar gerar um novo 2FA.
      *
      * @param username  -> Nome do utilizador ou email
-     * @param path      -> Localização do ficheiro que vai guardar a chave
      * @throws IOException
      */
     public static void NewGoogleAuthenticator(String username) throws IOException {

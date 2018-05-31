@@ -8,3 +8,5 @@ data\.dat
 config\.cfg
 
 sk\.pem
+
+src/Tests/
