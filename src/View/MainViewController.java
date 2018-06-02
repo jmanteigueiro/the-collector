@@ -14,9 +14,12 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.*;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +30,8 @@ import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
 
+    private Clipboard clipboard = Clipboard.getSystemClipboard();
+    private ClipboardContent content = new ClipboardContent();
     private static Stage stage;
     private CredentialsViewModel credentialsViewModel;
 
@@ -131,14 +136,9 @@ public class MainViewController implements Initializable {
                 new PropertyValueFactory<>("website"));
         name.setCellValueFactory(
                 new PropertyValueFactory<>("username"));
-        website.setCellFactory(TextFieldTableCell.forTableColumn());
-        website.setOnEditCommit(event ->
-                event.getTableView().getItems().get(event.getTablePosition().getRow()).setWebsite(event.getNewValue()));
+        //website.setCellFactory(TextFieldTableCell.forTableColumn());
+        //name.setCellFactory(TextFieldTableCell.forTableColumn());
 
-        name.setCellFactory(TextFieldTableCell.forTableColumn());
-        name.setOnEditCommit(event ->
-                event.getTableView().getItems().get(event.getTablePosition().getRow()).setUsername(event.getNewValue())
-        );
 
         dataTable.setOnMouseClicked(event -> {
             Credential c = dataTable.getSelectionModel().getSelectedItem();
@@ -147,6 +147,22 @@ public class MainViewController implements Initializable {
                 displayDetailCredential(c, index);
             }
         });
+
+        dataTable.setOnKeyPressed(event -> {
+            KeyCombination keyCombinationShiftC = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
+
+            if (keyCombinationShiftC.match(event)) {
+                Credential c = dataTable.getSelectionModel().getSelectedItem();
+                content.putString(String.valueOf(c.getPassword()));
+                clipboard.setContent(content);
+                //scheduler.scheduleAtFixedRate( runner, 0, 2, TimeUnit.SECONDS);
+                //clipService.restart();
+
+            }
+
+
+        });
+
     }
 
     /**
