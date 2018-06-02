@@ -8,10 +8,12 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -81,7 +83,7 @@ public class TwoFactorController {
 
         try {
             Scene scene = new Scene(root);
-            stage.setTitle("2 factor authentication");
+            stage.setTitle("QR Code");
             stage.setResizable(false);
             stage.setScene(scene);
             stage.initModality(Modality.WINDOW_MODAL);
@@ -96,18 +98,23 @@ public class TwoFactorController {
     @FXML
     void validar(ActionEvent event) throws UnsupportedEncodingException, InterruptedException {
         Boolean valid = GAuth.validateTOTPCode(credentialsViewModel.getGoogleKey(), authcodefield.getText());
-        if (counter < 5 && control==true)
+        if (counter < 5 && control)
         {
             if (valid){
-                System.out.println("Valido!");
-                if (firsttime == true){
+                if (firsttime){
                     File file = new File("QRcode.png");
-
                     file.delete();
                 }
                 stage.close();
             }else {
-                System.out.println("Invalido");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Wrong code");
+                alert.setResizable(false);
+
+
+                alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                alert.setHeaderText("Try again");
+                alert.showAndWait();
                 counter++;
                 control=false;
                 Thread.currentThread().sleep(5000);
@@ -120,7 +127,15 @@ public class TwoFactorController {
             File file = new File(credentialsViewModel.getFilename());
 
             file.delete();
-            System.exit(1);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Wrong code");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("Code wrong too many times.");
+            alert.setContentText("The password safe was deleted for security reasons.");
+            alert.showAndWait();
+            System.exit(6000);
         }
     }
 

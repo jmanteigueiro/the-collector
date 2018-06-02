@@ -39,6 +39,6 @@ public class Credential implements Serializable {
 
     @Override
     public String toString(){
-        return ("Webiste: " + website + " Username: " + username + " Password:" + String.valueOf(password));
+        return ("Website: " + website + " Username: " + username + " Password:" + String.valueOf(password));
     }
 }
