@@ -8,24 +8,12 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class Main extends Application {
-
-    /**
-     * Este objeto contém todos os métodos de ligação entre a Main e os dados
-     */
-    private static CredentialsViewModel viewModel;
     /**
      * Este objeto contém todos os métodos de ligação entre a Main e os view
      */
-    private static MainViewController mainViewController;
-    /**
-     * Isto é um Javadoc, serve para descrever um método
-     *
-     * @param args isto é a descrição do parâmetro que é recebido
-     * @return isto é para descrever o valor que o método retorna
-     */
+    private MainViewController mainViewController;
+
     public static void main(String[] args) {
-        // Esta função deve ficar simplificada ao máximo
-        //
         // INFO SOBRE OS PACKAGES:
         // View       - Classes de UI
         // Model      - Classes de objetos a ser utilizados na aplicação
@@ -34,9 +22,6 @@ public class Main extends Application {
         //
         // Para obter os dados para a UI, deve invocar-se sempre métodos de classes ViewModel!
         // Instanciar um objeto da classe ViewModel e ir invocando métodos daí
-
-        // TODO: receber a chave privada RSA
-        //viewModel = new CredentialsViewModel(null);
 
         launch(args);
     }
@@ -47,14 +32,19 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/View/mainView.fxml"));
 
         Scene scene = new Scene(root, 800, 450);
+
+        mainViewController = new MainViewController();
+
         mainViewController.setStage(primaryStage);
+
+        primaryStage.setOnCloseRequest((WindowEvent event) -> {
+            mainViewController.showExitDialog(true);
+        });
+
         primaryStage.setTitle("The Collector");
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
         primaryStage.show();
-        primaryStage.setOnCloseRequest((WindowEvent event) -> {
-            mainViewController.showExitDialog(true);
-        });
     }
 
 }
