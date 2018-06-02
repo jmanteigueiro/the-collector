@@ -118,6 +118,9 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
         }
 
+        // Save after initialization so the AES symmetric key and the Integrity key change
+        credentialsViewModel.saveAllInformation();
+
         fillDataTable(credentialsViewModel.getCredentialsList());
 
         website.setCellValueFactory(

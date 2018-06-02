@@ -58,7 +58,8 @@ public class CredentialsViewModel {
 
         // Save after initialization so the AES symmetric key and the Integrity key change
         credentialsChanged = true;
-        saveAllInformation();
+        //saveAllInformation();
+        // ^ Done in the MainViewController now, because of GAuth
     }
 
     /**
