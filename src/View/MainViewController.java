@@ -100,6 +100,15 @@ public class MainViewController implements Initializable {
                 file = new File("");
                 System.exit(2001);
             }
+
+            try {
+                if(file.exists())
+                    file.delete();
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
         else {
             System.exit(4000);
