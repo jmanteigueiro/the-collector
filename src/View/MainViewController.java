@@ -134,9 +134,10 @@ public class MainViewController implements Initializable {
         dataTable.setOnMouseClicked(event -> {
             Credential c = dataTable.getSelectionModel().getSelectedItem();
             int index = dataTable.getSelectionModel().getSelectedIndex();
-            displayDetailCredential(c, index);
+            if (event.getClickCount() == 2 && (!dataTable.getSelectionModel().getSelectedItem().getWebsite().isEmpty())) {
+                displayDetailCredential(c, index);
+            }
         });
-
     }
 
     /**
