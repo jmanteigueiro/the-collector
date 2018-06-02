@@ -59,10 +59,15 @@ public class PortugueseEID {
 
             if (card == null) {
                 System.out.println("Wasn't able to obtain information from the card.");
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Insert a card and relauch the app.");
+                alert.setTitle("Card not found");
+                alert.setResizable(false);
+                alert.setHeight(400);
+                alert.setWidth(600);
+                alert.setHeaderText("Citizen Card was not found");
+                //alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
                 alert.showAndWait();
-                System.exit(1);
+                System.exit(1000);
             }
 
             sign_certif = null;
