@@ -6,7 +6,6 @@ import Data.Exceptions.CredentialsIntegrityException;
 import Data.Helpers.GsonHelpers;
 import Model.Config;
 import com.google.gson.Gson;
-import Authenticator.GAuth;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Region;
 
@@ -45,8 +44,6 @@ public class ConfigJSON {
         pteid.closeConnection();
         config.setDigitalSignature(hmac);
 
-        byte[] googlekey = config.getGkey();
-        config.setGkey(googlekey);
 
         Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);

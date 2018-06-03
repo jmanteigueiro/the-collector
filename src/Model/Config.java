@@ -27,9 +27,6 @@ public class Config implements Serializable {
     /*** Última assinatura digital das credenciais calculada, para efeitos de integridade */
     private byte[] digitalSignature;
 
-    /** Google Key*/
-    private byte[] gkey;
-
 
     public Config(){
         this.symmetricKey = Security.generate256BitKey();
@@ -104,13 +101,6 @@ public class Config implements Serializable {
         gson = null;
     }
 
-    public byte[] getGkey() {
-        return gkey;
-    }
-
-    public void setGkey(byte[] gkey) {
-        this.gkey = gkey;
-    }
 
     public Config clone(){
         Config newConfig = new Config();
@@ -120,7 +110,6 @@ public class Config implements Serializable {
         newConfig.setIntegrityKey(this.getIntegrityKey());
         newConfig.setInitVector(this.getInitVector());
         newConfig.setDigitalSignature(this.getDigitalSignature());
-        newConfig.setGkey(this.getGkey());
         return newConfig;
     }
 

@@ -5,7 +5,6 @@ import CryptoPackage.PortugueseEID;
 import CryptoPackage.Security;
 import Data.ConfigJSON;
 import Data.Exceptions.CredentialsIntegrityException;
-import Authenticator.GAuth;
 import Model.Config;
 import Model.CredentialsList;
 import javafx.scene.control.Alert;
@@ -205,13 +204,7 @@ public class CredentialsViewModel {
         return credentialsChanged;
     }
 
-    public byte[] getGoogleKey() {
-        return config.getGkey();
-    }
 
-    public void setGoogleKey(byte[] gKey) {
-        config.setGkey(gKey);
-    }
 
     public String getFilename() {
         return fileConfig;

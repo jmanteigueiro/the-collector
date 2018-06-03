@@ -18,7 +18,7 @@ import java.security.SecureRandom;
 
 public class GAuth {
 
-    public static byte[] gkey;
+    public static String gkey;
     //public static String gkey;
 
     /**
@@ -38,7 +38,7 @@ public class GAuth {
 
         getQRCode("TheCollector", username, key);
 
-        gkey = key.getBytes(StandardCharsets.ISO_8859_1);
+        gkey = key;
         //gkey = key;
     }
 
@@ -103,18 +103,16 @@ public class GAuth {
      *
      * @param key           -> Chave gerada por generateNewKey()
      * @param config
+     * @param configkey
      * @param insertedTOTP  -> Chave temporaria introduzida pelo utilizador
      * @return True se o código introduzido estiver correto, False se o código estiver errado
      */
-    public static boolean validateTOTPCode(byte[] configkey, String insertedTOTP) throws UnsupportedEncodingException {
-
-        gkey = configkey;
+    public static boolean validateTOTPCode(String configkey, String insertedTOTP) throws UnsupportedEncodingException {
 
 
-        String strKey = new String(gkey);
 
         try {
-            if (insertedTOTP.equals(TOTPCode(strKey))){
+            if (insertedTOTP.equals(TOTPCode(configkey))){
                 return true;
             }
             else

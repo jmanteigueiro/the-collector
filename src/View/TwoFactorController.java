@@ -18,10 +18,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
+import java.io.*;
 
 public class TwoFactorController {
     
@@ -43,8 +40,11 @@ public class TwoFactorController {
     private boolean control = true;
     private boolean firsttime = false;
 
+    public String codigo;
+
 
     private CredentialsViewModel credentialsViewModel;
+
 
 
     protected void open(Stage parentStage, Parent root, CredentialsViewModel viewModel) throws IOException {
@@ -62,15 +62,35 @@ public class TwoFactorController {
             }
         });
 
-        byte[] gKey = credentialsViewModel.getGoogleKey();
 
-        if (gKey != null){
-            code = gKey;
+        String line = null;
+        String code = null;
+
+
+
+            String user = System.getProperty("user.name");
+
+            String fileName = "/media/"+user+"/0836-0DB6/authcode.txt";
+
+            File f = new File(fileName);
+            if(f.exists() && !f.isDirectory()) {
+                try {
+                    FileReader fileReader = new FileReader(fileName);
+
+                    BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+                    while((line = bufferedReader.readLine()) != null) {
+                        codigo = line;
+                     }
+                 bufferedReader.close();
+                 }
+                catch (FileNotFoundException ex) {
+                    System.out.println("Unable to open file '" +fileName + "'");
+                }
+
         }
         else {
             GAuth.NewGoogleAuthenticator(new String(credentialsViewModel.getOwnerName()));
-
-            code = GAuth.gkey;
 
             File file = new File("QRcode.png");
             Image image = new Image(file.toURI().toString());
@@ -78,7 +98,14 @@ public class TwoFactorController {
 
             firsttime = true;
 
-            credentialsViewModel.setGoogleKey(code);
+            FileWriter fileWriter = new FileWriter(fileName);
+
+            // Always wrap FileWriter in BufferedWriter.
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            codigo = GAuth.gkey;
+            bufferedWriter.write(codigo);
+            bufferedWriter.close();
+
         }
 
         try {
@@ -97,7 +124,7 @@ public class TwoFactorController {
 
     @FXML
     void validar(ActionEvent event) throws UnsupportedEncodingException, InterruptedException {
-        Boolean valid = GAuth.validateTOTPCode(credentialsViewModel.getGoogleKey(), authcodefield.getText());
+        Boolean valid = GAuth.validateTOTPCode(codigo, authcodefield.getText());
         if (counter < 5 && control)
         {
             if (valid){
