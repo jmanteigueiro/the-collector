@@ -193,18 +193,21 @@ public class MainViewController implements Initializable {
     public void showExitDialog(boolean areCredentialsOpen){
         Alert alert;
         Optional<ButtonType> result;
-        if (credentialsViewModel.isCredentialsChanged() && areCredentialsOpen) {
-            alert = new Alert(Alert.AlertType.WARNING);
-            alert.setContentText("There are changes that haven't been saved. Do you want to save them now?");
-            result = alert.showAndWait();
 
-            ButtonType buttonTypeSave = new ButtonType("Yes", ButtonBar.ButtonData.YES);
-            ButtonType buttonTypeCancel = new ButtonType("No", ButtonBar.ButtonData.NO);
+        if (credentialsViewModel != null) {
+            if (credentialsViewModel.isCredentialsChanged() && areCredentialsOpen) {
+                alert = new Alert(Alert.AlertType.WARNING);
+                alert.setContentText("There are changes that haven't been saved. Do you want to save them now?");
+                result = alert.showAndWait();
 
-            alert.getButtonTypes().setAll(buttonTypeSave, buttonTypeCancel);
+                ButtonType buttonTypeSave = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+                ButtonType buttonTypeCancel = new ButtonType("No", ButtonBar.ButtonData.NO);
 
-            if (result.get() == buttonTypeSave) {
-                credentialsViewModel.saveAllInformation();
+                alert.getButtonTypes().setAll(buttonTypeSave, buttonTypeCancel);
+
+                if (result.get() == buttonTypeSave) {
+                    credentialsViewModel.saveAllInformation();
+                }
             }
         }
 
