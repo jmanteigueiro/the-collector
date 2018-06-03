@@ -9,6 +9,7 @@ import Authenticator.GAuth;
 import Model.Config;
 import Model.CredentialsList;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Region;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class CredentialsViewModel {
     private CredentialsList credentialsList;
     private byte[] credentialsHash;
     private boolean credentialsChanged = false;
-
+    private String ownerName;
     private ConfigJSON configJSON;
 
     public CredentialsViewModel() {
@@ -62,13 +63,16 @@ public class CredentialsViewModel {
         // ^ Done in the MainViewController now, because of GAuth
     }
 
+    public String getOwnerName(){
+        return ownerName;
+    }
+
     /**
      * Método a ser chamado quando o ficheiro já existe, i.e. o utilizador já está registado.
      */
     private void loadAllInformation() {
         // Carregar chave pública e dados cifrados
         config = configJSON.loadConfig();
-        System.out.println(config.getGkey());
 
         if (config.getAuthenticationPublicKey() == null)
             return;
@@ -82,9 +86,15 @@ public class CredentialsViewModel {
 
         if (!verified){
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("The application was not able to verify your identity.");
+            alert.setTitle("Identity not verified");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("Wasn't able to verify your identity.");
+            alert.setContentText("The application will close now.");
             alert.showAndWait();
-            System.exit(2);
+
+            System.exit(5006);
         }
 
         // TODO: fazer google auth
@@ -101,10 +111,16 @@ public class CredentialsViewModel {
         try {
             config = configJSON.decryptConfig(config);
         } catch (CredentialsIntegrityException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Credentials integrity is compromised.");
+            alert.setTitle("Integrity compromised");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("Credentials integrity is compromised.");
+            alert.setContentText("The application will close now.");
             alert.showAndWait();
+
             System.exit(3);
         }
 
@@ -131,7 +147,7 @@ public class CredentialsViewModel {
 
         PortugueseEID pid = new PortugueseEID();
         PublicKey publicKey = pid.getPublicKey();
-
+        ownerName = pid.getOwnerName();
         config.setAuthenticationPublicKey( publicKey.getEncoded() );
 
         pid.closeConnection();

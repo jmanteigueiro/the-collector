@@ -4,8 +4,11 @@ import CryptoPackage.Security;
 import Model.Credential;
 import Model.CredentialsList;
 import ViewModel.CredentialsViewModel;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,10 +16,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.*;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +31,9 @@ import java.util.ResourceBundle;
 
 public class MainViewController implements Initializable {
 
-    private Stage stage;
+    private Clipboard clipboard = Clipboard.getSystemClipboard();
+    private ClipboardContent content = new ClipboardContent();
+    private static Stage stage;
     private CredentialsViewModel credentialsViewModel;
 
     @FXML
@@ -61,10 +67,10 @@ public class MainViewController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         File file = null;
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Splash - The Collector");
-        alert.setHeaderText("Welcome to The Collector");
-        alert.setContentText("Choose one of the following options.");
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("The Collector");
+        alert.setHeaderText("Your personal password safe");
+        alert.setContentText("Choose one of the following options:");
 
         ButtonType buttonTypeCreate = new ButtonType("Create a new file");
         ButtonType buttonTypeLoad = new ButtonType("Load an existing file");
@@ -73,38 +79,45 @@ public class MainViewController implements Initializable {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == buttonTypeLoad) {
-            do {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open a Credentials Database");
-                fileChooser.setInitialDirectory(new File("."));
-                fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
-                );
-                file = fileChooser.showOpenDialog(stage);
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Open a Credentials Database");
+            fileChooser.setInitialDirectory(new File("."));
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
+            );
+            file = fileChooser.showOpenDialog(stage);
 
-                if (file == null)
-                    showExitDialog(false);
+            if (file == null) {
+                file = new File("");
+                System.exit(2002);
             }
-            while (file == null);
         }
         else if (result.get() == buttonTypeCreate){
-            do {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open a Credentials Database");
-                fileChooser.setInitialDirectory(new File("."));
-                fileChooser.setInitialFileName("creddb.cfg");
-                fileChooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
-                );
-                file = fileChooser.showSaveDialog(stage);
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Open a Credentials Database");
+            fileChooser.setInitialDirectory(new File("."));
+            fileChooser.setInitialFileName("creddb.cfg");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("TheCollectorFile", "*.cfg")
+            );
+            file = fileChooser.showSaveDialog(stage);
 
-                if (file == null)
-                    showExitDialog(false);
+            if (file == null) {
+                file = new File("");
+                System.exit(2001);
             }
-            while (file == null);
+
+            try {
+                if(file.exists())
+                    file.delete();
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
         else {
-            System.exit(1);
+            System.exit(4000);
         }
 
         credentialsViewModel = new CredentialsViewModel(file.getAbsolutePath());
@@ -127,20 +140,51 @@ public class MainViewController implements Initializable {
                 new PropertyValueFactory<>("website"));
         name.setCellValueFactory(
                 new PropertyValueFactory<>("username"));
-        website.setCellFactory(TextFieldTableCell.forTableColumn());
-        website.setOnEditCommit(event ->
-                event.getTableView().getItems().get(event.getTablePosition().getRow()).setWebsite(event.getNewValue()));
+        //website.setCellFactory(TextFieldTableCell.forTableColumn());
+        //name.setCellFactory(TextFieldTableCell.forTableColumn());
 
-        name.setCellFactory(TextFieldTableCell.forTableColumn());
-        name.setOnEditCommit(event ->
-                event.getTableView().getItems().get(event.getTablePosition().getRow()).setUsername(event.getNewValue())
-        );
 
         dataTable.setOnMouseClicked(event -> {
             Credential c = dataTable.getSelectionModel().getSelectedItem();
             int index = dataTable.getSelectionModel().getSelectedIndex();
-            displayDetailCredential(c, index);
+            if (event.getClickCount() == 2 && (!dataTable.getSelectionModel().getSelectedItem().getWebsite().isEmpty())) {
+                displayDetailCredential(c, index);
+            }
         });
+
+        ScheduledService<Boolean> svc = new ScheduledService<Boolean>() {
+            protected Task<Boolean> createTask() {
+                return new Task<Boolean>() {
+                    protected Boolean call() {
+                        Platform.runLater(() -> {
+                            Clipboard cb = Clipboard.getSystemClipboard();
+                            cb.clear();
+
+                        });
+                        return true;
+                    }
+                };
+
+            }
+        };
+        svc.setPeriod(Duration.millis(20000));
+        svc.start();
+
+        dataTable.setOnKeyPressed(event -> {
+            KeyCombination keyCombinationShiftC = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
+
+            if (keyCombinationShiftC.match(event)) {
+                Credential c = dataTable.getSelectionModel().getSelectedItem();
+                content.putString(String.valueOf(c.getPassword()));
+                clipboard.setContent(content);
+                //scheduler.scheduleAtFixedRate( runner, 0, 2, TimeUnit.SECONDS);
+                //clipService.restart();
+
+            }
+
+
+        });
+
     }
 
     /**
@@ -165,7 +209,7 @@ public class MainViewController implements Initializable {
         }
 
         alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setContentText("Are you sure you want to exit The Collector?");
+        alert.setContentText("Are you sure you want to exit?");
         result = alert.showAndWait();
 
         if (result.get() == ButtonType.OK) {
@@ -199,9 +243,16 @@ public class MainViewController implements Initializable {
     void onSaveFile(ActionEvent event) {
         boolean done = credentialsViewModel.saveAllInformation();
         if ( !done ) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error saving file");
+
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Wasn't possible to save your changes.");
+            alert.setTitle("Data not saved");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("An error occurred while saving.");
+            //alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
             alert.showAndWait();
+            //System.exit(3001);
         }
     }
     /**

@@ -7,6 +7,9 @@ import Data.Helpers.GsonHelpers;
 import Model.Config;
 import com.google.gson.Gson;
 import Authenticator.GAuth;
+import javafx.scene.control.Alert;
+import javafx.scene.layout.Region;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -71,7 +74,12 @@ public class ConfigJSON {
             wholeConfig = fis.readAllBytes();
         }
         catch (FileNotFoundException e) {
-            System.out.println("File not found: " + filename);
+            Alert alert = new Alert(Alert.AlertType.ERROR, filename + " not found.");
+            alert.setTitle("File not found");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.showAndWait();
             return new Config();
         }
         catch (Exception e){

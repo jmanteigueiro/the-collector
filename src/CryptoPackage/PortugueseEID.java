@@ -4,6 +4,7 @@ import Data.Helpers.GsonHelpers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Region;
 import pt.gov.cartaodecidadao.*;
 
 import java.io.*;
@@ -34,6 +35,15 @@ public class PortugueseEID {
         try {
             System.loadLibrary("pteidlibj");
         } catch (UnsatisfiedLinkError e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Wasn't possible to find the Citizen Card API.\n Install the Citizen Card official application and try again.");
+            alert.setTitle("CC API not found");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("Could not load necessary libraries");
+            //alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
+            alert.showAndWait();
+            System.exit(1001);
             System.err.println("Native code library failed to load.\n" + e);
         }
     }
@@ -58,11 +68,16 @@ public class PortugueseEID {
             }
 
             if (card == null) {
-                System.out.println("Wasn't able to obtain information from the card.");
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Wasn't possible to obtain information from the card.\nInsert a card and relaunch the app.");
+                alert.setTitle("Card not found");
+                alert.setResizable(false);
+
+                alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                alert.setHeaderText("Citizen Card was not found");
+                //alert.setContentText("Insert Citizen Card, or verify that it is correctly inserted, then open this application again.");
                 alert.showAndWait();
-                System.exit(1);
+                closeConnection();
+                System.exit(1000);
             }
 
             sign_certif = null;
@@ -107,6 +122,7 @@ public class PortugueseEID {
             pBAsignedNonce = card.Sign(pBAhashedNonce, true);
         } catch (PTEID_Exception e) {
             e.printStackTrace();
+            System.exit(5000);
         }
 
         // TESTING
@@ -119,6 +135,7 @@ public class PortugueseEID {
             sha256withRSA = Signature.getInstance("SHA256withRSA");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            System.exit(5001);
         }
 
         // Init the Signature with the public key
@@ -127,6 +144,7 @@ public class PortugueseEID {
             sha256withRSA.initVerify(pk);
         } catch (InvalidKeyException e) {
             e.printStackTrace();
+            System.exit(5002);
         }
 
         // Pass the nonce to be verified
@@ -134,6 +152,7 @@ public class PortugueseEID {
             sha256withRSA.update(nonce.getBytes("UTF-8"));
         } catch (SignatureException | UnsupportedEncodingException e) {
             e.printStackTrace();
+            System.exit(5003);
         }
 
         // Obtain the result. True if the signature is valid, false if otherwise
@@ -143,6 +162,7 @@ public class PortugueseEID {
             result = sha256withRSA.verify(pBAsignedNonce.GetBytes());
         } catch (SignatureException e) {
             e.printStackTrace();
+            System.exit(5004);
         }
 
         // Return the result
@@ -203,6 +223,22 @@ public class PortugueseEID {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public String getOwnerName() {
+        String capitalizedName = null;
+        try {
+            capitalizedName = card.getID().getGivenName();
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+        }
+        String[] substrings = capitalizedName.split(" ");
+        StringBuilder sb = new StringBuilder("");
+        for (String substring : substrings) {
+            sb.append(substring.substring(0, 1)).append(substring.substring(1, substring.length()).toLowerCase()).append("_");
+        }
+        sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
     }
 
     /**
@@ -434,6 +470,7 @@ public class PortugueseEID {
             pBAsignature = card.Sign(pBAhashedNonce, true);
         } catch (PTEID_Exception e) {
             e.printStackTrace();
+            System.exit(5009);
         }
 
         return pBAsignature.GetBytes();
