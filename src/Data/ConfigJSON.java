@@ -33,6 +33,7 @@ public class ConfigJSON {
     public Config saveConfig(Config config) throws IOException {
         byte[] symmetricKey = Security.generate256BitKey();
         byte[] integrityKey = Security.generate256BitKey();
+        byte[] gkey = config.getGkey();
 
         byte[] initializationVector = Security.generateRandomBytes(16);
         config.setInitVector(initializationVector);
@@ -40,13 +41,13 @@ public class ConfigJSON {
         byte[] cipherCredentials = Security.encryptAES(config.getCredentialsBytes(), symmetricKey, initializationVector);
         config.setCredentialsBytes(cipherCredentials);
 
+        byte[] cipherGKey = Security.encryptAES(config.getGkey(), symmetricKey, initializationVector);
+        config.setGkey(cipherGKey);
+
         PortugueseEID pteid = new PortugueseEID();
-        byte[] hmac = pteid.signBytes(cipherCredentials);// Security.computeHMAC(cipherCredentials, integrityKey);
+        byte[] hmac = pteid.signBytes( config.getBytesForDigitalSignature() );
         pteid.closeConnection();
         config.setDigitalSignature(hmac);
-
-        byte[] googlekey = config.getGkey();
-        config.setGkey(googlekey);
 
         Gson gson = GsonHelpers.buildCustomGson();
         String configJson = gson.toJson(config);
@@ -57,6 +58,7 @@ public class ConfigJSON {
 
         config.setSymmetricKey(symmetricKey);
         config.setIntegrityKey(integrityKey);
+        config.setGkey(gkey);
 
         return config;
     }
@@ -99,12 +101,15 @@ public class ConfigJSON {
 
     public Config decryptConfig(Config config) throws CredentialsIntegrityException {
         PortugueseEID pteid = new PortugueseEID();
-        if (!pteid.verifySignature(config.getCredentialsBytes(), config.getDigitalSignature()))
+        if (!pteid.verifySignature(config.getBytesForDigitalSignature(), config.getDigitalSignature()))
             throw new CredentialsIntegrityException();
         pteid.closeConnection();
 
         byte[] plainCredentials = Security.decryptAES(config.getCredentialsBytes(), config.getSymmetricKey(), config.getInitVector());
         config.setCredentialsBytes(plainCredentials);
+
+        byte[] plainGKey = Security.decryptAES(config.getGkey(), config.getSymmetricKey(), config.getInitVector());
+        config.setGkey(plainGKey);
 
         return config;
     }

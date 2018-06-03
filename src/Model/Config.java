@@ -1,6 +1,7 @@
 package Model;
 
 import CryptoPackage.Security;
+import Data.Helpers.ArrayHelpers;
 import com.google.gson.Gson;
 
 import java.io.Serializable;
@@ -24,12 +25,11 @@ public class Config implements Serializable {
     /*** Chave de integridade para calculo de HMAC-SHA256 */
     private transient byte[] integrityKey;
 
-    /*** Última assinatura digital das credenciais calculada, para efeitos de integridade */
-    private byte[] digitalSignature;
-
     /** Google Key*/
     private byte[] gkey;
 
+    /*** Última assinatura digital das credenciais calculada, para efeitos de integridade */
+    private byte[] digitalSignature;
 
     public Config(){
         this.symmetricKey = Security.generate256BitKey();
@@ -110,6 +110,13 @@ public class Config implements Serializable {
 
     public void setGkey(byte[] gkey) {
         this.gkey = gkey;
+    }
+
+    public byte[] getBytesForDigitalSignature(){
+        byte[] bytesFinal = ArrayHelpers.concat(credentialsBytes, authenticationPublicKey);
+        bytesFinal = ArrayHelpers.concat(bytesFinal, initVector);
+        bytesFinal = ArrayHelpers.concat(bytesFinal, gkey);
+        return bytesFinal;
     }
 
     public Config clone(){
