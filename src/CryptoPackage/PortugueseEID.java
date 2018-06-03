@@ -282,65 +282,33 @@ public class PortugueseEID {
     }
 
 
-    /**
+     /**
      * Writes the keys to the CC personal notes field
      *
      * @param symmetricKey symmetric Key in the format of String
      * @param integrityKey integrity key in the format of String
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(String symmetricKey, String integrityKey) {
-        // Initiate a StringBuilder
-        StringBuilder dataToWrite = new StringBuilder();
-
-        // Append the data
-        dataToWrite.append("SymmetricKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(symmetricKey);
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append("IntegrityKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(integrityKey);
-
-        // Encode it to Base64
-        String encoded = Base64.getEncoder().encodeToString(dataToWrite.toString().getBytes());
-
-        // Create a PTEID_ByteArray with the data
-        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
-
-        // Flag to obtain the result
-        boolean result = false;
-        try {
-
-            // Write the data to the card
-            // If successful, result equals true
-            // Else, result equals false
-            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
-        } catch (PTEID_Exception e) {
-            e.printStackTrace();
-        }
-
-        // Return the result
-        return result;
-    }
-
-    /**
-     * Writes the keys to the CC personal notes field
-     *
-     * @param symmetricKey symmetric Key in the format of String
-     * @param integrityKey integrity key in the format of String
-     * @return true or false depending if the data was written to the card or not
-     */
-    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey) {
+    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey, String masterPassword, String iv) {
         DBKeys dbKeys = new DBKeys();
+        Notes notes = new Notes();
         dbKeys.setIntegrityKey(Base64.getEncoder().encodeToString(integrityKey));
         dbKeys.setSymmetricKey(Base64.getEncoder().encodeToString(symmetricKey));
 
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-        String json = gson.toJson(dbKeys);
+        String keys = gson.toJson(dbKeys);
+
+        byte[] ciphered = Security.encryptAES(keys.getBytes(), masterPassword.getBytes(), iv.getBytes());
+
+        notes.setData(new String(ciphered));
+        notes.setIv(iv);
+
+        String notes_to_encode = gson.toJson(notes);
 
         // Encode it to Base64
-        String encoded = Base64.getEncoder().encodeToString(json.getBytes());
+        //String encoded = Base64.getEncoder().encodeToString(notes_to_encode);
+        String encoded = Base64.getEncoder().encodeToString(notes_to_encode.getBytes());
+
 
         // Create a PTEID_ByteArray with the data
         PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
@@ -403,19 +371,27 @@ public class PortugueseEID {
         return result;
     }
 
-    public DBKeys getKeysFromCC() {
+    public DBKeys getKeysFromCC(String masterPassword) {
 
         // Initiate a DBKeys to contain both keys
         DBKeys keys = new DBKeys();
 
+        Notes notes = new Notes();
+
+
         try {
             // Read the data from the card
+            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
             String dataRead = card.readPersonalNotes();
 
             String decoded = new String(Base64.getDecoder().decode(dataRead));
 
-            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-            keys = gson.fromJson(decoded, keys.getClass());
+            notes = gson.fromJson(new String(decoded), notes.getClass());
+
+            byte[] deciphered = Security.decryptAES(notes.getData().getBytes(), masterPassword.getBytes(), notes.getIv().getBytes());
+
+            keys = gson.fromJson(new String(deciphered), keys.getClass());
 
         } catch (PTEID_Exception e) {
             e.printStackTrace();

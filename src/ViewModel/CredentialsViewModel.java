@@ -99,7 +99,7 @@ public class CredentialsViewModel {
         // TODO: fazer google auth
 
         // Obter chaves de cifra e integridade
-        DBKeys dbKeys = pid.getKeysFromCC();
+        DBKeys dbKeys = pid.getKeysFromCC("123");
 
         config.setSymmetricKey( Base64.getDecoder().decode(dbKeys.getSymmetricKey()) );
         config.setIntegrityKey( Base64.getDecoder().decode(dbKeys.getIntegrityKey()) );
@@ -174,7 +174,7 @@ public class CredentialsViewModel {
         }
 
         PortugueseEID pid = new PortugueseEID();
-        boolean result = pid.writeKeysToCC(config.getSymmetricKey(), config.getIntegrityKey());
+        boolean result = pid.writeKeysToCC(config.getSymmetricKey(), config.getIntegrityKey(), "1234567890123456", "0000000000000000");
         pid.closeConnection();
 
         if (!result) {
