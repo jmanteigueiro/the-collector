@@ -307,6 +307,7 @@ public class PortugueseEID {
         notes.setIv(cipherIv);
 
         String sNotes = gson.toJson(notes);
+        sNotes = sNotes + "                         ";
 
         // Encode it to Base64
         //String encoded = Base64.getEncoder().encodeToString(notes_to_encode);
@@ -382,7 +383,7 @@ public class PortugueseEID {
     }
 
     public static DBKeys decryptKeysFromNotes(Notes notes, byte[] cipherKey){
-        DBKeys keys = null;
+        DBKeys keys = new DBKeys();
 
         String deciphered = new String( Security.decryptAES(notes.getData(), cipherKey, notes.getIv()) );
 
