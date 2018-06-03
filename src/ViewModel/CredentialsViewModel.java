@@ -1,6 +1,7 @@
 package ViewModel;
 
 import CryptoPackage.DBKeys;
+import CryptoPackage.Notes;
 import CryptoPackage.PortugueseEID;
 import CryptoPackage.Security;
 import Data.ConfigJSON;
@@ -9,12 +10,14 @@ import Authenticator.GAuth;
 import Model.Config;
 import Model.CredentialsList;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Region;
 
 import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Base64;
+import java.util.Optional;
 
 /**
  * Ligação entre a janela principal do programa (lista de credenciais) e os objetos.
@@ -22,12 +25,18 @@ import java.util.Base64;
 public class CredentialsViewModel {
     private String fileConfig = "creddb.cfg";
 
+    private ConfigJSON configJSON;
+
     public Config config;
     private CredentialsList credentialsList;
+
     private byte[] credentialsHash;
     private boolean credentialsChanged = false;
+
     private String ownerName;
-    private ConfigJSON configJSON;
+
+    private byte[] masterKey;
+    private byte[] masterSalt;
 
     public CredentialsViewModel() {
         initProgram();
@@ -96,10 +105,37 @@ public class CredentialsViewModel {
             System.exit(5006);
         }
 
-        // TODO: fazer google auth
+        // Obter Master PW
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Input Master Password");
+        dialog.setHeaderText("Master Password");
+        dialog.setContentText("Please enter your password:");
+        Optional<String> result = dialog.showAndWait();
+        String masterpw = null;
+        if (result.isPresent()){
+            String aux = result.get();
+            if (!aux.isEmpty())
+                masterpw = aux;
+        }
+        if (masterpw == null){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Wrong password");
+            alert.setResizable(false);
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("Password is not valid.");
+            alert.setContentText("The application will close now.");
+            alert.showAndWait();
+            System.exit(4);
+        }
+
+        Notes ccNotes = pid.getNotesFromCC();
+
+        masterSalt = ccNotes.getSalt();
+        masterKey = Security.deriveKeyFromString(masterpw, masterSalt);
 
         // Obter chaves de cifra e integridade
-        DBKeys dbKeys = pid.getKeysFromCC("1234567890123456");
+
+        DBKeys dbKeys = PortugueseEID.decryptKeysFromNotes(ccNotes, masterKey);
 
         config.setSymmetricKey( Base64.getDecoder().decode(dbKeys.getSymmetricKey()) );
         config.setIntegrityKey( Base64.getDecoder().decode(dbKeys.getIntegrityKey()) );
@@ -150,6 +186,22 @@ public class CredentialsViewModel {
         config.setAuthenticationPublicKey( publicKey.getEncoded() );
 
         pid.closeConnection();
+
+        // Set master PW
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Set Master Password");
+        dialog.setHeaderText("Set Master Password");
+        dialog.setContentText("Please enter a secure password:");
+        Optional<String> result = dialog.showAndWait();
+        String masterpw = null;
+        if (result.isPresent()){
+            String aux = result.get();
+            if (!aux.isEmpty())
+                masterpw = aux;
+        }
+
+        masterSalt = Security.generateRandomBytes(16);
+        masterKey = Security.deriveKeyFromString(masterpw, masterSalt);
     }
 
 
@@ -174,7 +226,7 @@ public class CredentialsViewModel {
         }
 
         PortugueseEID pid = new PortugueseEID();
-        boolean result = pid.writeKeysToCC(config.getSymmetricKey(), config.getIntegrityKey(), "1234567890123456", "0000000000000000");
+        boolean result = pid.writeKeysToCC(config.getSymmetricKey(), config.getIntegrityKey(), masterKey, masterSalt);
         pid.closeConnection();
 
         if (!result) {

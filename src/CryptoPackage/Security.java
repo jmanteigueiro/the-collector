@@ -1,12 +1,11 @@
 package CryptoPackage;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
@@ -245,6 +244,22 @@ public class Security {
         }
         assert digest != null;
         return digest.digest(value);
+    }
+
+    public static byte[] deriveKeyFromString(String password, byte[] salt){
+        int iterations  = 1000;
+        char[] cpw = password.toCharArray();
+        byte[] key = null;
+
+        try {
+            PBEKeySpec pbeKeySpec = new PBEKeySpec(cpw, salt, iterations, 256);
+            SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            key = secretKeyFactory.generateSecret(pbeKeySpec).getEncoded();
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+
+        return key;
     }
 
 }

@@ -289,7 +289,7 @@ public class PortugueseEID {
      * @param integrityKey integrity key in the format of String
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey, String masterPassword, String iv) {
+    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey, byte[] cipherKey, byte[] cipherSalt) {
         DBKeys dbKeys = new DBKeys();
         Notes notes = new Notes();
         dbKeys.setIntegrityKey(Base64.getEncoder().encodeToString(integrityKey));
@@ -298,10 +298,13 @@ public class PortugueseEID {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String keys = gson.toJson(dbKeys);
 
-        byte[] ciphered = Security.encryptAES(keys.getBytes(), masterPassword.getBytes(), iv.getBytes());
+        byte[] cipherIv = Security.generateRandomBytes(16);
+
+        byte[] ciphered = Security.encryptAES(keys.getBytes(), cipherKey, cipherIv);
 
         notes.setData(ciphered);
-        notes.setIv(iv);
+        notes.setSalt(cipherSalt);
+        notes.setIv(cipherIv);
 
         String notes_to_encode = gson.toJson(notes);
 
@@ -330,13 +333,11 @@ public class PortugueseEID {
     }
 
 
-    public DBKeys getKeysFromCC(String masterPassword) {
-
+    public DBKeys getKeysFromCC(byte[] cipherKey) {
         // Initiate a DBKeys to contain both keys
         DBKeys keys = new DBKeys();
 
         Notes notes = new Notes();
-
 
         try {
             // Read the data from the card
@@ -348,13 +349,47 @@ public class PortugueseEID {
 
             notes = gson.fromJson(new String(decoded), notes.getClass());
 
-            String deciphered = new String(Security.decryptAES(notes.getData(), masterPassword.getBytes(), notes.getIv().getBytes()));
+            String deciphered = new String( Security.decryptAES(notes.getData(), cipherKey, notes.getIv()) );
 
-            keys = gson.fromJson(new String(deciphered), keys.getClass());
+            keys = gson.fromJson(deciphered, keys.getClass());
 
         } catch (PTEID_Exception e) {
             e.printStackTrace();
+            keys = null;
         }
+
+        return keys;
+    }
+
+    public Notes getNotesFromCC(){
+        Notes notes = new Notes();
+
+        try {
+            // Read the data from the card
+            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
+            String dataRead = card.readPersonalNotes();
+
+            byte[] decoded = Base64.getDecoder().decode(dataRead);
+
+            notes = gson.fromJson(new String(decoded), notes.getClass());
+
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+            notes = null;
+        }
+
+        return notes;
+    }
+
+    public static DBKeys decryptKeysFromNotes(Notes notes, byte[] cipherKey){
+        DBKeys keys = null;
+
+        String deciphered = new String( Security.decryptAES(notes.getData(), cipherKey, notes.getIv()) );
+
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
+        keys = gson.fromJson(deciphered, keys.getClass());
 
         return keys;
     }

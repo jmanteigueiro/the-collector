@@ -4,7 +4,8 @@ import java.io.Serializable;
 
 public class Notes implements Serializable {
     private byte[] data;
-    private String iv;
+    private byte[] iv;
+    private byte[] salt;
 
     public byte[] getData() {
         return data;
@@ -14,11 +15,19 @@ public class Notes implements Serializable {
         this.data = data;
     }
 
-    public String getIv() {
+    public byte[] getIv() {
         return iv;
     }
 
-    public void setIv(String iv) {
+    public void setIv(byte[] iv) {
         this.iv = iv;
+    }
+
+    public byte[] getSalt() {
+        return salt;
+    }
+
+    public void setSalt(byte[] salt) {
+        this.salt = salt;
     }
 }
