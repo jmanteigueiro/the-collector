@@ -306,15 +306,15 @@ public class PortugueseEID {
         notes.setSalt(cipherSalt);
         notes.setIv(cipherIv);
 
-        String notes_to_encode = gson.toJson(notes);
+        String sNotes = gson.toJson(notes);
 
         // Encode it to Base64
         //String encoded = Base64.getEncoder().encodeToString(notes_to_encode);
-        String encoded = Base64.getEncoder().encodeToString(notes_to_encode.getBytes());
+        //String encoded = Base64.getEncoder().encodeToString(notes_to_encode.getBytes());
 
 
         // Create a PTEID_ByteArray with the data
-        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
+        PTEID_ByteArray pb = new PTEID_ByteArray(sNotes.getBytes(), sNotes.getBytes().length);
 
         // Flag to obtain the result
         boolean result = false;
@@ -331,7 +331,6 @@ public class PortugueseEID {
         // Return the result
         return result;
     }
-
 
     public DBKeys getKeysFromCC(byte[] cipherKey) {
         // Initiate a DBKeys to contain both keys
@@ -368,11 +367,11 @@ public class PortugueseEID {
             // Read the data from the card
             Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-            String dataRead = card.readPersonalNotes();
+            String s = card.readPersonalNotes();
 
-            byte[] decoded = Base64.getDecoder().decode(dataRead);
+            //byte[] decoded = Base64.getDecoder().decode(dataRead);
 
-            notes = gson.fromJson(new String(decoded), notes.getClass());
+            notes = gson.fromJson(s, notes.getClass());
 
         } catch (PTEID_Exception e) {
             e.printStackTrace();
