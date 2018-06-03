@@ -282,65 +282,36 @@ public class PortugueseEID {
     }
 
 
-    /**
+     /**
      * Writes the keys to the CC personal notes field
      *
      * @param symmetricKey symmetric Key in the format of String
      * @param integrityKey integrity key in the format of String
      * @return true or false depending if the data was written to the card or not
      */
-    public boolean writeKeysToCC(String symmetricKey, String integrityKey) {
-        // Initiate a StringBuilder
-        StringBuilder dataToWrite = new StringBuilder();
-
-        // Append the data
-        dataToWrite.append("SymmetricKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(symmetricKey);
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append("IntegrityKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(integrityKey);
-
-        // Encode it to Base64
-        String encoded = Base64.getEncoder().encodeToString(dataToWrite.toString().getBytes());
-
-        // Create a PTEID_ByteArray with the data
-        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
-
-        // Flag to obtain the result
-        boolean result = false;
-        try {
-
-            // Write the data to the card
-            // If successful, result equals true
-            // Else, result equals false
-            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
-        } catch (PTEID_Exception e) {
-            e.printStackTrace();
-        }
-
-        // Return the result
-        return result;
-    }
-
-    /**
-     * Writes the keys to the CC personal notes field
-     *
-     * @param symmetricKey symmetric Key in the format of String
-     * @param integrityKey integrity key in the format of String
-     * @return true or false depending if the data was written to the card or not
-     */
-    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey) {
+    public boolean writeKeysToCC(byte[] symmetricKey, byte[] integrityKey, byte[] cipherKey, byte[] cipherSalt) {
         DBKeys dbKeys = new DBKeys();
+        Notes notes = new Notes();
         dbKeys.setIntegrityKey(Base64.getEncoder().encodeToString(integrityKey));
         dbKeys.setSymmetricKey(Base64.getEncoder().encodeToString(symmetricKey));
 
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-        String json = gson.toJson(dbKeys);
+        String keys = gson.toJson(dbKeys);
+
+        byte[] cipherIv = Security.generateRandomBytes(16);
+
+        byte[] ciphered = Security.encryptAES(keys.getBytes(), cipherKey, cipherIv);
+
+        notes.setData(ciphered);
+        notes.setSalt(cipherSalt);
+        notes.setIv(cipherIv);
+
+        String notes_to_encode = gson.toJson(notes);
 
         // Encode it to Base64
-        String encoded = Base64.getEncoder().encodeToString(json.getBytes());
+        //String encoded = Base64.getEncoder().encodeToString(notes_to_encode);
+        String encoded = Base64.getEncoder().encodeToString(notes_to_encode.getBytes());
+
 
         // Create a PTEID_ByteArray with the data
         PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
@@ -362,64 +333,63 @@ public class PortugueseEID {
     }
 
 
-    /**
-     * Writes the keys to the CC personal notes field
-     *
-     * @param keys keys object with both keys
-     * @return true or false depending if the data was written to the card or not
-     */
-    public boolean writeKeysToCC(DBKeys keys) throws PTEID_Exception {
-        // Initiate a StringBuilder
-        StringBuilder dataToWrite = new StringBuilder();
-
-        // Append the data
-        dataToWrite.append("SymmetricKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(keys.getSymmetricKey());
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append("IntegrityKey");
-        dataToWrite.append(">>>>>>");
-        dataToWrite.append(keys.getIntegrityKey());
-
-        // Encode it to Base64
-        String encoded = Base64.getEncoder().encodeToString(dataToWrite.toString().getBytes());
-
-        // Create a PTEID_ByteArray with the data
-        PTEID_ByteArray pb = new PTEID_ByteArray(encoded.getBytes(), encoded.getBytes().length);
-
-        // Flag to obtain the result
-        boolean result = false;
-        try {
-
-            // Write the data to the card
-            // If successful, result equals true
-            // Else, result equals false
-            result = card.writePersonalNotes(pb, card.getPins().getPinByPinRef(PTEID_Pin.AUTH_PIN));
-        } catch (PTEID_Exception e) {
-            e.printStackTrace();
-        }
-
-        // Return the result
-        return result;
-    }
-
-    public DBKeys getKeysFromCC() {
-
+    public DBKeys getKeysFromCC(byte[] cipherKey) {
         // Initiate a DBKeys to contain both keys
         DBKeys keys = new DBKeys();
 
+        Notes notes = new Notes();
+
         try {
             // Read the data from the card
+            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
             String dataRead = card.readPersonalNotes();
 
-            String decoded = new String(Base64.getDecoder().decode(dataRead));
+            byte[] decoded = Base64.getDecoder().decode(dataRead);
 
-            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-            keys = gson.fromJson(decoded, keys.getClass());
+            notes = gson.fromJson(new String(decoded), notes.getClass());
+
+            String deciphered = new String( Security.decryptAES(notes.getData(), cipherKey, notes.getIv()) );
+
+            keys = gson.fromJson(deciphered, keys.getClass());
 
         } catch (PTEID_Exception e) {
             e.printStackTrace();
+            keys = null;
         }
+
+        return keys;
+    }
+
+    public Notes getNotesFromCC(){
+        Notes notes = new Notes();
+
+        try {
+            // Read the data from the card
+            Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
+            String dataRead = card.readPersonalNotes();
+
+            byte[] decoded = Base64.getDecoder().decode(dataRead);
+
+            notes = gson.fromJson(new String(decoded), notes.getClass());
+
+        } catch (PTEID_Exception e) {
+            e.printStackTrace();
+            notes = null;
+        }
+
+        return notes;
+    }
+
+    public static DBKeys decryptKeysFromNotes(Notes notes, byte[] cipherKey){
+        DBKeys keys = null;
+
+        String deciphered = new String( Security.decryptAES(notes.getData(), cipherKey, notes.getIv()) );
+
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
+        keys = gson.fromJson(deciphered, keys.getClass());
 
         return keys;
     }
