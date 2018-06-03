@@ -303,12 +303,15 @@ public class MainViewController implements Initializable {
         if( newC != null ) {
             CredentialsList list = credentialsViewModel.getCredentialsList();
 
-            if (index >= 0 ) {
+            if (newC.getUsername().equals("-9999999") && newC.getWebsite().equals("-9999999"))
                 list.remove(index);
-                list.add(index, newC);
-            }
             else {
-                list.add(newC);
+                if (index >= 0) {
+                    list.remove(index);
+                    list.add(index, newC);
+                } else {
+                    list.add(newC);
+                }
             }
 
             // Check if list was edited

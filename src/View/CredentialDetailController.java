@@ -43,6 +43,9 @@ public class CredentialDetailController {
     @FXML
     private Button bt_save;
 
+    @FXML
+    private Button bt_delete;
+
     private Credential newC;
 
     private final boolean[] change = new boolean[1];
@@ -136,6 +139,12 @@ public class CredentialDetailController {
             newC.setWebsite(tf_website.getText());
             newC.setPassword(tf_pass.getText().toCharArray());
             stage.close();
+        });
+
+        bt_delete.setOnAction(event -> {
+            newC.setUsername("-9999999");
+            newC.setWebsite("-9999999");
+            newC.setPassword("-9999999".toCharArray());
         });
 
     }
