@@ -3,14 +3,14 @@ package CryptoPackage;
 import java.io.Serializable;
 
 public class Notes implements Serializable {
-    private String data;
+    private byte[] data;
     private String iv;
 
-    public String getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
 

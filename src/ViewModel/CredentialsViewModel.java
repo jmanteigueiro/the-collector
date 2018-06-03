@@ -99,7 +99,7 @@ public class CredentialsViewModel {
         // TODO: fazer google auth
 
         // Obter chaves de cifra e integridade
-        DBKeys dbKeys = pid.getKeysFromCC("123");
+        DBKeys dbKeys = pid.getKeysFromCC("1234567890123456");
 
         config.setSymmetricKey( Base64.getDecoder().decode(dbKeys.getSymmetricKey()) );
         config.setIntegrityKey( Base64.getDecoder().decode(dbKeys.getIntegrityKey()) );
