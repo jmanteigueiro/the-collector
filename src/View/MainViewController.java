@@ -4,8 +4,11 @@ import CryptoPackage.Security;
 import Model.Credential;
 import Model.CredentialsList;
 import ViewModel.CredentialsViewModel;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,13 +16,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.*;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -147,6 +148,24 @@ public class MainViewController implements Initializable {
                 displayDetailCredential(c, index);
             }
         });
+
+        ScheduledService<Boolean> svc = new ScheduledService<Boolean>() {
+            protected Task<Boolean> createTask() {
+                return new Task<Boolean>() {
+                    protected Boolean call() {
+                        Platform.runLater(() -> {
+                            Clipboard cb = Clipboard.getSystemClipboard();
+                            cb.clear();
+
+                        });
+                        return true;
+                    }
+                };
+
+            }
+        };
+        svc.setPeriod(Duration.millis(20000));
+        svc.start();
 
         dataTable.setOnKeyPressed(event -> {
             KeyCombination keyCombinationShiftC = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN);
