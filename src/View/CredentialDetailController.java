@@ -145,6 +145,7 @@ public class CredentialDetailController {
             newC.setUsername("-9999999");
             newC.setWebsite("-9999999");
             newC.setPassword("-9999999".toCharArray());
+            stage.close();
         });
 
     }

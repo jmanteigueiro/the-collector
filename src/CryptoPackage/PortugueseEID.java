@@ -101,7 +101,8 @@ public class PortugueseEID {
         try {
             hash = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.exit(5000);
         }
 
         // Hash the nonce with SHA-256 before signing
@@ -110,7 +111,8 @@ public class PortugueseEID {
             assert hash != null;
             nonces = hash.digest(nonce.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.exit(5000);
         }
 
         // Create a PTEID_ByteArray with the hashed nonce
@@ -121,7 +123,7 @@ public class PortugueseEID {
         try {
             pBAsignedNonce = card.Sign(pBAhashedNonce, true);
         } catch (PTEID_Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.exit(5000);
         }
 

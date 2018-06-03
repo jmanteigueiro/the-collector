@@ -101,7 +101,7 @@ public class MainViewController implements Initializable {
         }
         else if (result.get() == buttonTypeCreate){
             FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Open a Credentials Database");
+            fileChooser.setTitle("Create New Credentials Database");
             fileChooser.setInitialDirectory(new File("."));
             fileChooser.setInitialFileName("creddb.cfg");
             fileChooser.getExtensionFilters().addAll(
