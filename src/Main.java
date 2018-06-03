@@ -39,6 +39,7 @@ public class Main extends Application {
 
         primaryStage.setOnCloseRequest((WindowEvent event) -> {
             mainViewController.showExitDialog(true);
+            event.consume();
         });
 
         primaryStage.setTitle("The Collector");

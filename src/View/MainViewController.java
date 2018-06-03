@@ -20,6 +20,8 @@ import javafx.scene.input.*;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -76,6 +78,11 @@ public class MainViewController implements Initializable {
         ButtonType buttonTypeLoad = new ButtonType("Load an existing file");
 
         alert.getButtonTypes().setAll(buttonTypeCreate, buttonTypeLoad);
+        Window alertWindow = alert.getDialogPane().getScene().getWindow();
+
+        alertWindow.setOnCloseRequest((WindowEvent event) -> {
+            System.exit(0);
+        });
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == buttonTypeLoad) {
