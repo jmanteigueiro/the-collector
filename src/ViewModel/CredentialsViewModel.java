@@ -176,7 +176,7 @@ public class CredentialsViewModel {
     /**
      * Método a ser chamado quando não existe um ficheiro Config, ou quando a chave pública não existe
      */
-    private void registerUser(){
+    private void registerUser() {
         config = new Config();
         credentialsList = new CredentialsList();
         config.setCredentialsList(credentialsList);
@@ -184,7 +184,7 @@ public class CredentialsViewModel {
         PortugueseEID pid = new PortugueseEID();
         PublicKey publicKey = pid.getPublicKey();
         ownerName = pid.getOwnerName();
-        config.setAuthenticationPublicKey( publicKey.getEncoded() );
+        config.setAuthenticationPublicKey(publicKey.getEncoded());
 
         pid.closeConnection();
 
@@ -193,12 +193,36 @@ public class CredentialsViewModel {
         dialog.setTitle("Set Master Password");
         dialog.setHeaderText("Set Master Password");
         dialog.setContentText("Please enter a secure password:");
+
         Optional<String> result = dialog.showAndWait();
         String masterpw = null;
-        if (result.isPresent()){
+        if (result.isPresent()) {
             String aux = result.get();
-            if (!aux.isEmpty())
+            if (!aux.isEmpty()) {
                 masterpw = aux;
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Master Key Failed");
+                alert.setResizable(false);
+
+                alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                alert.setHeaderText("No master key was input");
+                alert.setContentText("The application will close now.");
+                alert.showAndWait();
+
+                System.exit(10000);
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Master Key Failed");
+            alert.setResizable(false);
+
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            alert.setHeaderText("No master key was input");
+            alert.setContentText("The application will close now.");
+            alert.showAndWait();
+
+            System.exit(10000);
         }
 
         masterSalt = Security.generateRandomBytes(16);
